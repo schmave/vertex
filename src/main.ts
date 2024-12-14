@@ -121,6 +121,12 @@ function createGame(puzzleData: Puzzle) {
   window.addEventListener("keyup", onKeyup);
   window.addEventListener("wheel", onWheel);
 
+  uiCanvas.addEventListener("mousedown", (event) => {
+    if (event.button == 2) {
+      removeClosestSegment(event.clientX, event.clientY);
+    }
+  });
+
   undoElement.addEventListener("click", undoStroke);
   zoomElement.children[0]?.addEventListener("click", () =>
     zoom(
@@ -582,19 +588,17 @@ const hammertime = new Hammer(uiCanvas);
 hammertime.get("press").set({ threshold: 1, time: 50 });
 hammertime.get("pan").set({ threshold: 1, direction: Hammer.DIRECTION_ALL });
 
-hammertime.on("press pressup panstart panend panmove pancancel", (e) => {
-  if (e.type === "panstart" || e.type === "press") {
+hammertime.on("doubletap", (e) => {
+  removeClosestSegment(e.center.x, e.center.y);
+});
+
+hammertime.on("panstart panend panmove pancancel", (e) => {
+  if (e.type === "panstart") {
     if (mouseDown) {
       onMouseup();
     }
-    // TODO: Make hammerjs call us when a right-click happens, or add a mousedown
-    // handler that only pays attention to right-clicks.
     onMousedown(e.center.x, e.center.y, null);
-  } else if (
-    e.type === "panend" ||
-    e.type === "pressup" ||
-    e.type === "pancancel"
-  ) {
+  } else if (e.type === "panend" || e.type === "pancancel") {
     onMouseup();
   } else if (e.type === "panmove") {
     if (e.srcEvent instanceof MouseEvent) {
@@ -625,34 +629,39 @@ function onWheel(event: WheelEvent) {
     zoom(scale - 0.2, mouse.x, mouse.y);
   }
 }
+
+function removeClosestSegment(x: number, y: number) {
+  let closestDist = Infinity;
+  let closest;
+  for (const stroke of completedStrokes) {
+    let dist = distToSegment(
+      {
+        x: (x * canvasScale - xShift) / scale,
+        y: (y * canvasScale - yShift) / scale,
+      },
+      { x: stroke[0].coordinates[0], y: stroke[0].coordinates[1] },
+      { x: stroke[1].coordinates[0], y: stroke[1].coordinates[1] }
+    );
+    if (dist < closestDist) {
+      closestDist = dist;
+      closest = stroke;
+    }
+  }
+  if (closest && closestDist < 5) {
+    let stroke = completedStrokes.indexOf(<Stroke>isStrokeCompleted(closest));
+    completedStrokes.splice(stroke, 1);
+    render();
+  }
+  return;
+}
+
 function onMousedown(x: number, y: number, button: number | null) {
   mouse.x = x * canvasScale;
   mouse.y = y * canvasScale;
-  if (button === 2) {
-    let closestDist = Infinity;
-    let closest;
-    for (const stroke of completedStrokes) {
-      let dist = distToSegment(
-        { x: (mouse.x - xShift) / scale, y: (mouse.y - yShift) / scale },
-        { x: stroke[0].coordinates[0], y: stroke[0].coordinates[1] },
-        { x: stroke[1].coordinates[0], y: stroke[1].coordinates[1] }
-      );
-      if (dist < closestDist) {
-        closestDist = dist;
-        closest = stroke;
-      }
-    }
-    if (closest && closestDist < 5) {
-      let stroke = completedStrokes.indexOf(<Stroke>isStrokeCompleted(closest));
-      completedStrokes.splice(stroke, 1);
-      render();
-    }
-    return;
-  }
   mouseDown = true;
-
   handleSelection();
 }
+
 let hovered: Vertex;
 function handleSelection() {
   const x = (mouse.x - xShift) / scale;
