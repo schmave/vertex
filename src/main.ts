@@ -36,6 +36,8 @@ interface Vertex {
   coordinates: number[];
   shapes: string[];
 
+  // These properties are missing from the initial puzzle data
+  id?: string;
   selected?: 0 | 1 | 2;
 }
 interface Puzzle {
@@ -85,8 +87,40 @@ let xShift: number;
 let yShift: number;
 let scale = 1;
 
+function saveCompletedStrokes() {
+  localStorage.setItem(
+    `strokes-${puzzle.id}`,
+    JSON.stringify(
+      completedStrokes.map((stroke) => [
+        parseInt(stroke[0].id, 10),
+        parseInt(stroke[1].id, 10),
+      ])
+    )
+  );
+}
+
+function loadCompletedStrokes() {
+  const data = localStorage.getItem(`strokes-${puzzle.id}`);
+  if (data) {
+    const strokeData: [number, number][] = JSON.parse(data);
+    completedStrokes = [];
+    for (const strokeI in strokeData) {
+      const stroke = strokeData[strokeI];
+      completedStrokes.push([
+        puzzle.vertices[stroke[0]],
+        puzzle.vertices[stroke[1]],
+      ]);
+    }
+  }
+}
+
 function createGame(puzzleData: Puzzle) {
   puzzle = puzzleData;
+  for (const vertexId in puzzle.vertices) {
+    puzzle.vertices[vertexId].id = vertexId;
+  }
+  loadCompletedStrokes();
+
   extents = getExtents();
   if (
     ((extents.maxX - extents.minX) * (extents.maxY - extents.minY)) /
@@ -153,6 +187,9 @@ function createGame(puzzleData: Puzzle) {
   });
 
   setCanvasSizes();
+  render();
+  // Calling render twice is necessary if the stored data included completed shapes
+  // I guess rendering a shape updates the shape's "completed" property.
   render();
 }
 
@@ -231,6 +268,7 @@ function getCompletedStrokesAtPoint(vertex: Vertex | string): Stroke[] {
   const strokes: Stroke[] = completedStrokes.filter(
     (stroke) => stroke[0] === vertex || stroke[1] === vertex
   );
+
   return strokes;
 }
 function isStrokeCompleted(stroke: Stroke) {
@@ -534,6 +572,7 @@ function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
     return false;
   }
   completedStrokes.push(stroke);
+  saveCompletedStrokes();
   undoElement.classList.remove("disabled");
   render();
   return true;
@@ -550,6 +589,7 @@ function undoStroke() {
   }
   undoElement.classList.remove("disabled");
   completedStrokes.pop();
+  saveCompletedStrokes();
   render();
 }
 function onKeyup(event: KeyboardEvent) {
