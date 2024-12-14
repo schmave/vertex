@@ -672,7 +672,7 @@ function handleSelection() {
   }
   dist = Math.sqrt(dist);
   const screenDist = dist * scale;
-  if (closestKey && screenDist < 1.7 * getPointSize(closestKey)) {
+  if (closestKey && screenDist < 3 * getPointSize(closestKey)) {
     if (mouseDown) {
       clicked = puzzle.vertices[closestKey];
       clicked.selected = 1;
