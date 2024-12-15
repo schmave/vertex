@@ -1,6 +1,7 @@
 import React from "react";
 import { createGame } from "./main";
 import testPuzzle from "./test.json";
+import puzzleDates from "./puzzle-dates.json";
 
 type State = {
   selectedPuzzle?: string;
@@ -18,41 +19,15 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
     };
   }
 
-  fetchPuzzles = async () => {
-    const select = document.getElementById("select") as HTMLSelectElement;
-    const response = await fetch(
-      "https://api.github.com/repos/Q726kbXuN/vertex/git/trees/master?recursive=1"
-    ); // THANK YOU
-    const data = await response.json();
-    const puzzles = data.tree.filter((file: { path: string; url: string }) =>
-      file.path.startsWith("data/")
-    );
-    puzzles.reverse().forEach((puzzle: { path: string; url: string }) => {
-      const path = puzzle.path.split("/")[3];
-      if (path) {
-        const year = parseInt(path.split("-")[0]);
-        const option = document.createElement("option");
-        option.value = puzzle.url;
-        option.innerText = path.split(".")[0];
-        select.children[2 * (2024 - year) + 2].append(option);
-      }
-    });
-  };
-
   onSelect = async () => {
     if (this.state.selectedPuzzle) {
       let response = await fetch(this.state.selectedPuzzle);
-      let data = await response.json();
-      createGame(JSON.parse(atob(data.content)));
+      createGame(await response.json());
     } else {
       createGame(testPuzzle);
     }
     this.props.onHide();
   };
-
-  componentDidMount(): void {
-    this.fetchPuzzles();
-  }
 
   render() {
     return (
@@ -67,18 +42,14 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
             }}
           >
             <option value="">Choose a puzzle</option>
-            <hr />
-            <optgroup label="2024"></optgroup>
-            <hr />
-            <optgroup label="2023"></optgroup>
-            <hr />
-            <optgroup label="2022"></optgroup>
-            <hr />
-            <optgroup label="2021"></optgroup>
-            <hr />
-            <optgroup label="2020"></optgroup>
-            <hr />
-            <optgroup label="2019"></optgroup>
+            {puzzleDates.map((date) => {
+              const splits = date.split("-");
+              return (
+                <option value={`/data/${date}.json`}>
+                  {splits[0]}: {date}
+                </option>
+              );
+            })}
           </select>
           <button onClick={this.onSelect}>Select</button>
         </div>
