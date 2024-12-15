@@ -10,45 +10,23 @@
 </head>
 
 <body>
-    <div id="app">
-        <canvas id="fill"></canvas>
-        <canvas id="stroke"></canvas>
-        <canvas id="cursor"></canvas>
-        <canvas id="points"></canvas>
-        <canvas id="uicanvas"></canvas>
-        <div class="info">
-            <span id="constructor"></span>
-            <span id="theme"></span>
-            <span id="date"></span>
-        </div>
-        <button type="button" id="undo">Undo</button>
-        <div id="zoom">
-            <button type="button">+</button>
-            <button type="button">-</button>
-        </div>
-        <div id="overlay">
-            <div class="container">
-                <span>Vertex Archive</span>
-                <select name="puzzle" id="select">
-                    <option value="">Choose a puzzle</option>
-                    <hr>
-                    <optgroup label="2024"></optgroup>
-                    <hr>
-                    <optgroup label="2023"></optgroup>
-                    <hr>
-                    <optgroup label="2022"></optgroup>
-                    <hr>
-                    <optgroup label="2021"></optgroup>
-                    <hr>
-                    <optgroup label="2020"></optgroup>
-                    <hr>
-                    <optgroup label="2019"></optgroup>
-                </select>
-                <button id="selectpuzzle">Select</button>
-            </div>
-        </div>
+    <canvas id="fill"></canvas>
+    <canvas id="stroke"></canvas>
+    <canvas id="cursor"></canvas>
+    <canvas id="points"></canvas>
+    <canvas id="uicanvas"></canvas>
+    <div class="info">
+        <span id="constructor"></span>
+        <span id="theme"></span>
+        <span id="date"></span>
     </div>
-    <script type="module" src="/src/main.ts"></script>
+    <button type="button" id="undo">Undo</button>
+    <div id="zoom">
+        <button type="button">+</button>
+        <button type="button">-</button>
+    </div>
+    <div id="react-app"/>
+    <script type="module" src="/src/react-main.tsx"></script>
 </body>
 
 </html>

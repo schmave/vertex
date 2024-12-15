@@ -1,5 +1,3 @@
-import "./style.css";
-import testPuzzle from "./test.json";
 import Hammer from "hammerjs";
 
 interface Vector {
@@ -92,8 +90,8 @@ function saveCompletedStrokes() {
     `strokes-${puzzle.id}`,
     JSON.stringify(
       completedStrokes.map((stroke) => [
-        parseInt(stroke[0].id, 10),
-        parseInt(stroke[1].id, 10),
+        parseInt(stroke[0].id!, 10),
+        parseInt(stroke[1].id!, 10),
       ])
     )
   );
@@ -112,9 +110,11 @@ function loadCompletedStrokes() {
       ]);
     }
   }
+  // renderShapes marks completed shapes as completed
+  renderShapes();
 }
 
-function createGame(puzzleData: Puzzle) {
+export function createGame(puzzleData: Puzzle) {
   puzzle = puzzleData;
   for (const vertexId in puzzle.vertices) {
     puzzle.vertices[vertexId].id = vertexId;
@@ -187,9 +187,6 @@ function createGame(puzzleData: Puzzle) {
   });
 
   setCanvasSizes();
-  render();
-  // Calling render twice is necessary if the stored data included completed shapes
-  // I guess rendering a shape updates the shape's "completed" property.
   render();
 }
 
@@ -813,37 +810,3 @@ function render() {
   renderCursor();
   renderUI();
 }
-
-async function fetchPuzzles() {
-  const select = <HTMLElement>document.getElementById("select");
-  const response = await fetch(
-    "https://api.github.com/repos/Q726kbXuN/vertex/git/trees/master?recursive=1"
-  ); // THANK YOU
-  const data = await response.json();
-  const puzzles = data.tree.filter((file: { path: string; url: string }) =>
-    file.path.startsWith("data/")
-  );
-  puzzles.reverse().forEach((puzzle: { path: string; url: string }) => {
-    const path = puzzle.path.split("/")[3];
-    if (path) {
-      const year = parseInt(path.split("-")[0]);
-      const option = document.createElement("option");
-      option.value = puzzle.url;
-      option.innerText = path.split(".")[0];
-      select.children[2 * (2024 - year) + 2].append(option);
-    }
-  });
-}
-document.getElementById("selectpuzzle")?.addEventListener("click", async () => {
-  const url = (<HTMLSelectElement>document.getElementById("select")).value;
-  if (url) {
-    (<HTMLDivElement>document.getElementById("overlay")).style.display = "none";
-    let response = await fetch(url);
-    let data = await response.json();
-    createGame(JSON.parse(atob(data.content))); // i dont even know
-  } else {
-    (<HTMLDivElement>document.getElementById("overlay")).style.display = "none";
-    createGame(testPuzzle);
-  }
-});
-fetchPuzzles();
