@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import Hammer from "hammerjs";
 
 interface Vector {
@@ -179,12 +180,7 @@ export function createGame(puzzleData: Puzzle) {
 
   constructorElement.innerText = puzzle.puzzleConstructor;
   themeElement.innerText = puzzle.theme;
-  dateElement.innerText = new Date(puzzle.date).toLocaleDateString(undefined, {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  dateElement.innerText = dayjs(puzzle.date).format("dddd,	MMMM DD, YYYY");
 
   setCanvasSizes();
   render();
