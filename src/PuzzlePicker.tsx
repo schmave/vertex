@@ -36,7 +36,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
   onSelect = async () => {
     if (this.state.chosenDate) {
       let response = await fetch(
-        `/data/${this.state.chosenDate.format("YYYY-MM-DD")}.json`
+        `./data/${this.state.chosenDate.format("YYYY-MM-DD")}.json`
       );
       createGame(await response.json());
     } else {
