@@ -161,6 +161,11 @@ export function createGame(puzzleData: Puzzle) {
       removeClosestSegment(event.clientX, event.clientY);
     }
   });
+  uiCanvas.addEventListener("mousemove", (event) => {
+    if (!mouseDown) {
+      onMousemove(event);
+    }
+  });
 
   undoElement.addEventListener("click", undoStroke);
   zoomElement.children[0]?.addEventListener("click", () =>
@@ -717,7 +722,17 @@ function handleSelection() {
   if (closestKey && screenDist < 3 * getPointSize(closestKey)) {
     if (mouseDown) {
       clicked = puzzle.vertices[closestKey];
-      clicked.selected = 1;
+
+      const strokes =
+        getStrokesAtPoint(clicked).length -
+        getCompletedStrokesAtPoint(clicked).length;
+
+      if (strokes > 0) {
+        clicked.selected = 1;
+        renderPoints();
+      } else {
+        clicked = null;
+      }
     } else {
       if (hovered && hovered !== puzzle.vertices[closestKey]) {
         hovered.selected = 0;
@@ -732,6 +747,7 @@ function handleSelection() {
   }
   renderCursor();
 }
+
 function onMouseup() {
   mouseDown = false;
 
