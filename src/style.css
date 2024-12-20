@@ -69,7 +69,7 @@ canvas {
   }
 
 }
-#undo {
+#undo, #fullscreen {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -85,6 +85,10 @@ canvas {
   color: var(--black);
   font-size: 15px;
 }
+#fullscreen {
+  bottom: 110px;
+}
+
 #zoom {
   display: flex;
   flex-direction: column;

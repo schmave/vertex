@@ -68,6 +68,9 @@ const cursorCtx = <CanvasRenderingContext2D>cursorCanvas.getContext('2d');
 const uiCtx = <CanvasRenderingContext2D>uiCanvas.getContext('2d');
 
 const undoElement = <HTMLButtonElement>document.getElementById('undo');
+const fullscreenElement = <HTMLButtonElement>(
+  document.getElementById('fullscreen')
+);
 const zoomElement = <HTMLDivElement>document.getElementById('zoom');
 const constructorElement = <HTMLSpanElement>(
   document.getElementById('constructor')
@@ -85,6 +88,20 @@ let extents: { minX: number; minY: number; maxX: number; maxY: number };
 let xShift: number;
 let yShift: number;
 let scale = 1;
+
+document.addEventListener('fullscreenchange', (event) => {
+  if (document.fullscreenElement) {
+    fullscreenElement.style.display = 'none';
+  } else {
+    fullscreenElement.style.display = 'flex';
+  }
+});
+
+export const goFullscreen = () =>
+  document.documentElement.requestFullscreen({
+    navigationUI: 'hide',
+  });
+fullscreenElement.addEventListener('click', goFullscreen);
 
 function saveCompletedStrokes() {
   localStorage.setItem(

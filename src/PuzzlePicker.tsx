@@ -1,5 +1,5 @@
 import React from 'react';
-import { createGame } from './main';
+import { createGame, goFullscreen } from './main';
 import testPuzzle from './test.json';
 import puzzleDates from './puzzle-dates.json';
 import dayjs, { Dayjs } from 'dayjs';
@@ -17,6 +17,9 @@ type Props = {
 const MIN_YEAR = 2019;
 const MAX_YEAR = 2024;
 const YEAR_KEY = 'picker-year';
+const LAST_PUZZLE_KEY = 'picker-date';
+
+const getClass = (year: number) => `y-${year}`;
 
 export default class PuzzlePicker extends React.PureComponent<Props, State> {
   constructor(props: Props) {
@@ -27,9 +30,13 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
       ? parseInt(yearFromStorage, 10)
       : MIN_YEAR;
 
+    const dateFromStorage = localStorage.getItem(LAST_PUZZLE_KEY);
+
     this.state = {
       chosenYear,
-      chosenDate: this.getClosestPuzzle(chosenYear),
+      chosenDate: dateFromStorage
+        ? dayjs(dateFromStorage)
+        : this.getClosestPuzzle(chosenYear),
     };
   }
 
@@ -44,9 +51,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
     }
     try {
       if (window.location.host.indexOf('localhost') === -1) {
-        await document.documentElement.requestFullscreen({
-          navigationUI: 'hide',
-        });
+        await goFullscreen();
       }
     } catch (e) {
       console.log('Exception from requestFullScreen', e);
@@ -58,9 +63,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
     let bestDiff = 10000000000,
       best: Dayjs | null = null;
 
-    const startingDate =
-      this.state?.chosenDate ||
-      dayjs().hour(0).minute(0).second(0).millisecond(0);
+    const startingDate = dayjs().hour(0).minute(0).second(0).millisecond(0);
 
     const target = startingDate.year(year);
 
@@ -78,16 +81,17 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
     return best!;
   };
 
-  adjustYear = (delta: number) => {
-    const newYear = this.state.chosenYear + delta;
-    if (newYear < MIN_YEAR || newYear > MAX_YEAR) {
-      return;
-    }
+  setDate = (newDate: Dayjs) => {
     this.setState({
-      chosenYear: newYear,
-      chosenDate: this.getClosestPuzzle(newYear),
+      chosenYear: newDate.year(),
+      chosenDate: newDate,
     });
-    localStorage.setItem(YEAR_KEY, newYear.toString());
+    localStorage.setItem(YEAR_KEY, newDate.year().toString());
+    localStorage.setItem(LAST_PUZZLE_KEY, newDate.format('YYYY-MM-DD'));
+  };
+
+  setYear = (newYear: number) => {
+    this.setDate(this.getClosestPuzzle(newYear));
   };
 
   adjustDate = (delta: number) => {
@@ -99,39 +103,61 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
       return;
     }
 
-    this.setState({ chosenDate: dayjs(puzzleDates[newI]) });
+    this.setDate(dayjs(puzzleDates[newI]));
   };
 
   render() {
     const { chosenYear, chosenDate } = this.state;
+
+    const years = [];
+    for (let y = MIN_YEAR; y <= MAX_YEAR; y++) {
+      years.push(y);
+    }
+
     return (
       <div id="overlay">
         <div className="puzzle-picker">
           <h1>Vertex Archive</h1>
-          <div className="row">
-            <button
-              disabled={chosenYear === MIN_YEAR}
-              onClick={() => this.adjustYear(-1)}
-            >
-              &lt;&lt; Prev Year
-            </button>
-            <div>{chosenDate.format('MMMM D, YYYY')}</div>
-            <button
-              disabled={chosenYear === MAX_YEAR}
-              onClick={() => this.adjustYear(1)}
-            >
-              Next Year &gt;&gt;
-            </button>
+          <div style={{ textAlign: 'center' }}>
+            <div>Jump to today's puzzle from year:</div>
+            <div className="row">
+              {years.map((y) => (
+                <button
+                  style={{ color: 'white' }}
+                  className={getClass(y)}
+                  onClick={() => this.setYear(y)}
+                >
+                  {y}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="row">
             <button className="date" onClick={() => this.adjustDate(-1)}>
-              &lt; Prev puzzle
+              -1 day
             </button>
+            <p>
+              {chosenDate.format('MMMM D')},{' '}
+              <span
+                className={getClass(chosenYear)}
+                style={{ padding: '2px', color: 'white' }}
+              >
+                {chosenYear}
+              </span>
+            </p>
             <button className="date" onClick={() => this.adjustDate(1)}>
-              Next puzzle &gt;
+              +1 day
             </button>
           </div>
-          <button onClick={this.onSelect}>Play!</button>
+          <button
+            style={{
+              fontSize: '1.3em',
+              backgroundColor: 'white',
+            }}
+            onClick={this.onSelect}
+          >
+            Play!
+          </button>
         </div>
       </div>
     );
