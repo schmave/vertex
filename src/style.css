@@ -107,7 +107,7 @@ canvas {
   border-top: none;
   border-radius: 0 0 50px 50px;
 }
-#zoom button:hover, #undo:hover {
+#zoom button:active, #undo:active {
   background-color: #b9b7b8;
 }
 #zoom button.disabled,#undo.disabled {
