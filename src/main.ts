@@ -118,13 +118,20 @@ function loadCompletedStrokes() {
 if (import.meta.hot) {
   import.meta.hot.accept((newModule) => {
     if (newModule) {
-      console.warn("HOT UPDATE main.ts -- things will be broken now");
-      // This is a step in the right direction
+      // Just reload so that things aren't broken after a hot update.
+      // I can't figure out how to make this work properly.
+      window.location.reload();
+      // console.warn("HOT UPDATE main.ts -- things will be broken now");
+      // // This is a step in the right direction
       // newModule.createGame(puzzle);
     }
   });
+
   import.meta.hot.dispose((data) => {
-    // TODO: remove event listeners?
+    // hammertime.get("pinch").set({ enable: false });
+    // hammertime.get("pan").set({ enable: false });
+    // hammertime.get("doubletap").set({ enable: false });
+    // isDead = true;
   });
 }
 
@@ -289,16 +296,19 @@ function isStrokeCompleted(stroke: Stroke) {
       (s[0] === stroke[1] && s[1] === stroke[0])
   );
 }
+
 function getPointSize(key: string) {
   const number =
     getStrokesAtPoint(key).length - getCompletedStrokesAtPoint(key).length;
-  const size = number < 4 ? 14 : number < 7 ? 18 : 22;
-  return (
-    size *
-    (document.documentElement.clientWidth < 700
-      ? Math.min(0.2 * scale + 0.8, 1.75)
-      : 1)
-  );
+  const size = number < 4 ? 12 : number < 7 ? 18 : 24;
+  const result = size * canvasScale * 1;
+  // This was the old way of adjusting the size of the points a little bit based
+  // on the current zoom.
+  // Math.min(0.2 * scale + 0.8, 1.75);
+  if (number === 7) {
+    console.log(number, size, result);
+  }
+  return result;
 }
 
 function renderStrokes() {
@@ -464,7 +474,7 @@ function renderPoints() {
     pointsCtx.fill();
     pointsCtx.stroke();
 
-    pointsCtx.font = "15px Inter";
+    pointsCtx.font = `${15 * canvasScale}px Inter`;
     pointsCtx.textAlign = "center";
     pointsCtx.textBaseline = "middle";
     pointsCtx.fillStyle = vertex.selected === 1 ? "#f7f5f6" : "black";
@@ -512,35 +522,46 @@ function renderCursor() {
 function renderUI() {
   uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
+  const footerHeight = 40 * canvasScale;
+  const footerTop = uiCanvas.height - footerHeight;
+
   uiCtx.fillStyle = "#f7f5f6";
   uiCtx.strokeStyle = "black";
   uiCtx.lineWidth = 2;
-  uiCtx.fillRect(0, uiCanvas.height - 40, uiCanvas.width, 40);
+  uiCtx.fillRect(0, footerTop, uiCanvas.width, footerHeight);
   uiCtx.beginPath();
-  uiCtx.moveTo(0, uiCanvas.height - 40);
-  uiCtx.lineTo(uiCanvas.width, uiCanvas.height - 40);
+  uiCtx.moveTo(0, footerTop);
+  uiCtx.lineTo(uiCanvas.width, footerTop);
   uiCtx.closePath();
   uiCtx.stroke();
 
   // triangle
+  const triangleHeight = 40 * canvasScale;
+  const triangleWidth = 50 * canvasScale;
   uiCtx.beginPath();
-  uiCtx.moveTo(uiCanvas.width / 2, uiCanvas.height - 70);
-  uiCtx.lineTo(uiCanvas.width / 2 - 25, uiCanvas.height - 25);
-  uiCtx.lineTo(uiCanvas.width / 2 + 25, uiCanvas.height - 25);
+  uiCtx.moveTo(uiCanvas.width / 2, footerTop - triangleHeight / 2);
+  uiCtx.lineTo(
+    uiCanvas.width / 2 - triangleWidth / 2,
+    footerTop + triangleHeight / 2
+  );
+  uiCtx.lineTo(
+    uiCanvas.width / 2 + triangleWidth / 2,
+    footerTop + triangleHeight / 2
+  );
   uiCtx.closePath();
   uiCtx.fill();
   uiCtx.stroke();
 
   uiCtx.textBaseline = "middle";
   uiCtx.fillStyle = "black";
-  uiCtx.font = "14px Inter";
+  uiCtx.font = `${14 * canvasScale}px Inter`;
   uiCtx.textAlign = "center";
   uiCtx.fillText(
     puzzle.shapes
       .filter((shape) => !shape.isPreDrawn && !shape.completed)
       .length.toString(),
     uiCanvas.width / 2,
-    uiCanvas.height - 37
+    footerTop + 7 * canvasScale
   );
 }
 function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
