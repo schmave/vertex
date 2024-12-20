@@ -1,6 +1,6 @@
 @font-face {
   font-family: Inter;
-  src: url('./inter.ttf');
+  src: url('./inter-small.ttf');
 }
 :root {
   font-family: Inter, system-ui, Arial, sans-serif;
