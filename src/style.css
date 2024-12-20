@@ -69,7 +69,7 @@ canvas {
   }
 
 }
-#undo, #fullscreen {
+#undo, #fullscreen, #back {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -87,6 +87,12 @@ canvas {
 }
 #fullscreen {
   bottom: 110px;
+}
+#back {
+  bottom: 5px;
+  width: fit-content;
+  height: 30px;
+  font-size: 11px;
 }
 
 #zoom {

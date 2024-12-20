@@ -67,6 +67,11 @@ const pointsCtx = <CanvasRenderingContext2D>pointsCanvas.getContext('2d');
 const cursorCtx = <CanvasRenderingContext2D>cursorCanvas.getContext('2d');
 const uiCtx = <CanvasRenderingContext2D>uiCanvas.getContext('2d');
 
+const backElement = <HTMLButtonElement>document.getElementById('back');
+backElement.addEventListener('click', () => {
+  window.location.reload();
+});
+
 const undoElement = <HTMLButtonElement>document.getElementById('undo');
 const fullscreenElement = <HTMLButtonElement>(
   document.getElementById('fullscreen')
