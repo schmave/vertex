@@ -36,7 +36,7 @@ interface Vertex {
   shapes: string[];
 
   // These properties are missing from the initial puzzle data
-  id?: string;
+  id?: number;
   selected?: 0 | 1 | 2;
 }
 interface Puzzle {
@@ -90,10 +90,7 @@ function saveCompletedStrokes() {
   localStorage.setItem(
     `strokes-${puzzle.id}`,
     JSON.stringify(
-      completedStrokes.map((stroke) => [
-        parseInt(stroke[0].id!, 10),
-        parseInt(stroke[1].id!, 10),
-      ])
+      completedStrokes.map((stroke) => [stroke[0].id, stroke[1].id])
     )
   );
 }
@@ -130,7 +127,6 @@ if (import.meta.hot) {
   import.meta.hot.dispose((data) => {
     // hammertime.get("pinch").set({ enable: false });
     // hammertime.get("pan").set({ enable: false });
-    // hammertime.get("doubletap").set({ enable: false });
     // isDead = true;
   });
 }
@@ -138,7 +134,7 @@ if (import.meta.hot) {
 export function createGame(puzzleData: Puzzle) {
   puzzle = puzzleData;
   for (const vertexId in puzzle.vertices) {
-    puzzle.vertices[vertexId].id = vertexId;
+    puzzle.vertices[vertexId].id = parseInt(vertexId, 10);
   }
   loadCompletedStrokes();
 
@@ -610,16 +606,36 @@ function onResize() {
   setCanvasSizes();
   render();
 }
+
+function isStrokeInShape(stroke: Stroke, shape: Shape): boolean {
+  return (
+    shape.vertices.includes(stroke[0].id!) &&
+    shape.vertices.includes(stroke[1].id!)
+  );
+}
+
 function undoStroke() {
   if (completedStrokes.length <= 0) {
     undoElement.classList.add('disabled');
     return;
   }
   undoElement.classList.remove('disabled');
-  completedStrokes.pop();
+
+  const completedShapes = puzzle.shapes.filter((s) => s.completed);
+
+  // Find the most recently completed stroke that is not part of a completed shape
+  for (let i = completedStrokes.length - 1; i >= 0; i--) {
+    const stroke = completedStrokes[i];
+    // If this stroke is not in any completed shape.
+    if (completedShapes.every((shape) => !isStrokeInShape(stroke, shape))) {
+      completedStrokes.splice(i, 1);
+      break;
+    }
+  }
   saveCompletedStrokes();
   render();
 }
+
 function onKeyup(event: KeyboardEvent) {
   if (event.key === 'Backspace' && completedStrokes.length > 0) {
     undoStroke();
@@ -650,10 +666,6 @@ function zoom(newScale: number, focusX: number, focusY: number) {
 let pinchStart: number = scale;
 const hammertime = new Hammer(uiCanvas);
 hammertime.get('pan').set({ threshold: 3, direction: Hammer.DIRECTION_ALL });
-
-hammertime.on('doubletap', (e) => {
-  removeClosestSegment(e.center.x, e.center.y);
-});
 
 hammertime.on('panstart panend panmove pancancel', (e) => {
   if (e.type === 'panstart') {
@@ -714,12 +726,11 @@ function removeClosestSegment(x: number, y: number) {
       closest = stroke;
     }
   }
-  if (closest && closestDist < 5) {
+  if (closest && closestDist < 10) {
     let stroke = completedStrokes.indexOf(<Stroke>isStrokeCompleted(closest));
     completedStrokes.splice(stroke, 1);
     render();
   }
-  return;
 }
 
 function onMousedown(x: number, y: number, button: number | null) {
