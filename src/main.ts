@@ -1,5 +1,5 @@
-import dayjs from "dayjs";
-import Hammer from "hammerjs";
+import dayjs from 'dayjs';
+import Hammer from 'hammerjs';
 
 interface Vector {
   x: number;
@@ -55,25 +55,25 @@ let completedStrokes: Stroke[] = [];
 let completed = false;
 
 const canvasScale = Math.ceil(window.devicePixelRatio);
-const fillCanvas = <HTMLCanvasElement>document.getElementById("fill");
-const strokeCanvas = <HTMLCanvasElement>document.getElementById("stroke");
-const pointsCanvas = <HTMLCanvasElement>document.getElementById("points");
-const cursorCanvas = <HTMLCanvasElement>document.getElementById("cursor");
-const uiCanvas = <HTMLCanvasElement>document.getElementById("uicanvas");
+const fillCanvas = <HTMLCanvasElement>document.getElementById('fill');
+const strokeCanvas = <HTMLCanvasElement>document.getElementById('stroke');
+const pointsCanvas = <HTMLCanvasElement>document.getElementById('points');
+const cursorCanvas = <HTMLCanvasElement>document.getElementById('cursor');
+const uiCanvas = <HTMLCanvasElement>document.getElementById('uicanvas');
 
-const fillCtx = <CanvasRenderingContext2D>fillCanvas.getContext("2d");
-const strokeCtx = <CanvasRenderingContext2D>strokeCanvas.getContext("2d");
-const pointsCtx = <CanvasRenderingContext2D>pointsCanvas.getContext("2d");
-const cursorCtx = <CanvasRenderingContext2D>cursorCanvas.getContext("2d");
-const uiCtx = <CanvasRenderingContext2D>uiCanvas.getContext("2d");
+const fillCtx = <CanvasRenderingContext2D>fillCanvas.getContext('2d');
+const strokeCtx = <CanvasRenderingContext2D>strokeCanvas.getContext('2d');
+const pointsCtx = <CanvasRenderingContext2D>pointsCanvas.getContext('2d');
+const cursorCtx = <CanvasRenderingContext2D>cursorCanvas.getContext('2d');
+const uiCtx = <CanvasRenderingContext2D>uiCanvas.getContext('2d');
 
-const undoElement = <HTMLButtonElement>document.getElementById("undo");
-const zoomElement = <HTMLDivElement>document.getElementById("zoom");
+const undoElement = <HTMLButtonElement>document.getElementById('undo');
+const zoomElement = <HTMLDivElement>document.getElementById('zoom');
 const constructorElement = <HTMLSpanElement>(
-  document.getElementById("constructor")
+  document.getElementById('constructor')
 );
-const themeElement = <HTMLSpanElement>document.getElementById("theme");
-const dateElement = <HTMLSpanElement>document.getElementById("date");
+const themeElement = <HTMLSpanElement>document.getElementById('theme');
+const dateElement = <HTMLSpanElement>document.getElementById('date');
 
 let clicked: Vertex | null;
 let selected: Vertex | null;
@@ -151,7 +151,7 @@ export function createGame(puzzleData: Puzzle) {
         canvasScale) <
     0.25
   ) {
-    console.log("doubling");
+    console.log('doubling');
     //double coordinates of vertices
     for (const key in puzzle.vertices) {
       puzzle.vertices[key].coordinates = puzzle.vertices[key].coordinates.map(
@@ -170,32 +170,32 @@ export function createGame(puzzleData: Puzzle) {
     (document.documentElement.clientHeight * canvasScale) / 2 -
     (extents.maxY - extents.minY) / 2;
 
-  window.visualViewport?.addEventListener("resize", onResize);
-  window.addEventListener("contextmenu", (event) => event.preventDefault());
-  window.addEventListener("touchmove", (event) => event.preventDefault());
-  window.addEventListener("keyup", onKeyup);
-  window.addEventListener("wheel", onWheel);
+  window.visualViewport?.addEventListener('resize', onResize);
+  window.addEventListener('contextmenu', (event) => event.preventDefault());
+  window.addEventListener('touchmove', (event) => event.preventDefault());
+  window.addEventListener('keyup', onKeyup);
+  window.addEventListener('wheel', onWheel);
 
-  uiCanvas.addEventListener("mousedown", (event) => {
+  uiCanvas.addEventListener('mousedown', (event) => {
     if (event.button == 2) {
       removeClosestSegment(event.clientX, event.clientY);
     }
   });
-  uiCanvas.addEventListener("mousemove", (event) => {
+  uiCanvas.addEventListener('mousemove', (event) => {
     if (!mouseDown) {
       onMousemove(event);
     }
   });
 
-  undoElement.addEventListener("click", undoStroke);
-  zoomElement.children[0]?.addEventListener("click", () =>
+  undoElement.addEventListener('click', undoStroke);
+  zoomElement.children[0]?.addEventListener('click', () =>
     zoom(
       scale + 0.4,
       (document.documentElement.clientWidth * canvasScale) / 2,
       (document.documentElement.clientHeight * canvasScale) / 2
     )
   );
-  zoomElement.children[1]?.addEventListener("click", () =>
+  zoomElement.children[1]?.addEventListener('click', () =>
     zoom(
       scale - 0.4,
       (document.documentElement.clientWidth * canvasScale) / 2,
@@ -205,7 +205,7 @@ export function createGame(puzzleData: Puzzle) {
 
   constructorElement.innerText = puzzle.puzzleConstructor;
   themeElement.innerText = puzzle.theme;
-  dateElement.innerText = dayjs(puzzle.date).format("dddd,	MMMM DD, YYYY");
+  dateElement.innerText = dayjs(puzzle.date).format('dddd,	MMMM DD, YYYY');
 
   setCanvasSizes();
   render();
@@ -255,7 +255,7 @@ function getExtents(): {
 }
 
 function getStrokesAtPoint(vertex: Vertex | string): Stroke[] {
-  if (typeof vertex === "string") {
+  if (typeof vertex === 'string') {
     vertex = puzzle.vertices[vertex];
   }
   const strokes: Stroke[] = [];
@@ -280,7 +280,7 @@ function getStrokesAtPoint(vertex: Vertex | string): Stroke[] {
   return strokes;
 }
 function getCompletedStrokesAtPoint(vertex: Vertex | string): Stroke[] {
-  if (typeof vertex === "string") {
+  if (typeof vertex === 'string') {
     vertex = puzzle.vertices[vertex];
   }
   const strokes: Stroke[] = completedStrokes.filter(
@@ -311,7 +311,7 @@ function renderStrokes() {
   strokeCtx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height);
   if (completed) return;
   for (const stroke of completedStrokes) {
-    strokeCtx.strokeStyle = "black";
+    strokeCtx.strokeStyle = 'black';
     strokeCtx.lineWidth = 1;
     strokeCtx.beginPath();
     strokeCtx.moveTo(
@@ -430,7 +430,7 @@ function renderPoints() {
 
     const size = getPointSize(key);
 
-    pointsCtx.strokeStyle = vertex.selected === 2 ? "#e7ad34" : "black";
+    pointsCtx.strokeStyle = vertex.selected === 2 ? '#e7ad34' : 'black';
 
     pointsCtx.lineWidth = 1;
     pointsCtx.setLineDash([1, 1]);
@@ -445,17 +445,17 @@ function renderPoints() {
     pointsCtx.closePath();
     if (vertex.selected) {
       pointsCtx.fillStyle =
-        vertex.selected === 2 ? "#e7ad3433" : "rgba(0, 0, 0, 0.2)";
+        vertex.selected === 2 ? '#e7ad3433' : 'rgba(0, 0, 0, 0.2)';
       pointsCtx.fill();
     }
     pointsCtx.stroke();
 
     pointsCtx.fillStyle =
       vertex.selected === 2
-        ? "#e7ad34"
+        ? '#e7ad34'
         : vertex.selected === 1
-        ? "black"
-        : "#f7f5f6";
+        ? 'black'
+        : '#f7f5f6';
     pointsCtx.lineWidth = 1;
     pointsCtx.setLineDash([]);
     pointsCtx.beginPath();
@@ -471,9 +471,9 @@ function renderPoints() {
     pointsCtx.stroke();
 
     pointsCtx.font = `${15 * canvasScale}px Inter`;
-    pointsCtx.textAlign = "center";
-    pointsCtx.textBaseline = "middle";
-    pointsCtx.fillStyle = vertex.selected === 1 ? "#f7f5f6" : "black";
+    pointsCtx.textAlign = 'center';
+    pointsCtx.textBaseline = 'middle';
+    pointsCtx.fillStyle = vertex.selected === 1 ? '#f7f5f6' : 'black';
     pointsCtx.fillText(
       strokes.toString(),
       scale * vertex.coordinates[0] + xShift,
@@ -486,11 +486,11 @@ function renderCursor() {
   if (completed) return;
   if (clicked && mouseDown) {
     if (clicked.selected === 2) {
-      cursorCtx.strokeStyle = "#e7ad34";
-      cursorCtx.fillStyle = "#e7ad34";
+      cursorCtx.strokeStyle = '#e7ad34';
+      cursorCtx.fillStyle = '#e7ad34';
     } else {
-      cursorCtx.strokeStyle = "black";
-      cursorCtx.fillStyle = "black";
+      cursorCtx.strokeStyle = 'black';
+      cursorCtx.fillStyle = 'black';
     }
 
     cursorCtx.lineWidth = 4;
@@ -521,8 +521,8 @@ function renderUI() {
   const footerHeight = 40 * canvasScale;
   const footerTop = uiCanvas.height - footerHeight;
 
-  uiCtx.fillStyle = "#f7f5f6";
-  uiCtx.strokeStyle = "black";
+  uiCtx.fillStyle = '#f7f5f6';
+  uiCtx.strokeStyle = 'black';
   uiCtx.lineWidth = 2;
   uiCtx.fillRect(0, footerTop, uiCanvas.width, footerHeight);
   uiCtx.beginPath();
@@ -548,10 +548,10 @@ function renderUI() {
   uiCtx.fill();
   uiCtx.stroke();
 
-  uiCtx.textBaseline = "middle";
-  uiCtx.fillStyle = "black";
+  uiCtx.textBaseline = 'middle';
+  uiCtx.fillStyle = 'black';
   uiCtx.font = `${14 * canvasScale}px Inter`;
-  uiCtx.textAlign = "center";
+  uiCtx.textAlign = 'center';
   uiCtx.fillText(
     puzzle.shapes
       .filter((shape) => !shape.isPreDrawn && !shape.completed)
@@ -578,7 +578,7 @@ function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
     const ua = ((dx - cx) * (ay - cy) - (dy - cy) * (ax - cx)) / den;
     const ub = ((bx - ax) * (ay - cy) - (by - ay) * (ax - cx)) / den;
     if (ua > 0 && ua < 1 && ub > 0 && ub < 1) {
-      console.log("crossing", vertex1, vertex2, stroke);
+      console.log('crossing', vertex1, vertex2, stroke);
       return false;
     }
   }
@@ -601,7 +601,7 @@ function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
   }
   completedStrokes.push(stroke);
   saveCompletedStrokes();
-  undoElement.classList.remove("disabled");
+  undoElement.classList.remove('disabled');
   render();
   return true;
 }
@@ -612,16 +612,16 @@ function onResize() {
 }
 function undoStroke() {
   if (completedStrokes.length <= 0) {
-    undoElement.classList.add("disabled");
+    undoElement.classList.add('disabled');
     return;
   }
-  undoElement.classList.remove("disabled");
+  undoElement.classList.remove('disabled');
   completedStrokes.pop();
   saveCompletedStrokes();
   render();
 }
 function onKeyup(event: KeyboardEvent) {
-  if (event.key === "Backspace" && completedStrokes.length > 0) {
+  if (event.key === 'Backspace' && completedStrokes.length > 0) {
     undoStroke();
   }
 }
@@ -629,13 +629,13 @@ function onKeyup(event: KeyboardEvent) {
 function zoom(newScale: number, focusX: number, focusY: number) {
   if (newScale >= 10) {
     newScale = 10;
-    zoomElement.children[0].classList.add("disabled");
+    zoomElement.children[0].classList.add('disabled');
   } else if (newScale <= 0.4) {
     newScale = 0.4;
-    zoomElement.children[1].classList.add("disabled");
+    zoomElement.children[1].classList.add('disabled');
   } else {
-    zoomElement.children[0].classList.remove("disabled");
-    zoomElement.children[1].classList.remove("disabled");
+    zoomElement.children[0].classList.remove('disabled');
+    zoomElement.children[1].classList.remove('disabled');
   }
   const x = (focusX - xShift) / scale; // mouse x in puzzle coordinates
   const newX = newScale * x + xShift; // screen x of same puzzle coordinates in new scale
@@ -649,34 +649,34 @@ function zoom(newScale: number, focusX: number, focusY: number) {
 }
 let pinchStart: number = scale;
 const hammertime = new Hammer(uiCanvas);
-hammertime.get("pan").set({ threshold: 3, direction: Hammer.DIRECTION_ALL });
+hammertime.get('pan').set({ threshold: 3, direction: Hammer.DIRECTION_ALL });
 
-hammertime.on("doubletap", (e) => {
+hammertime.on('doubletap', (e) => {
   removeClosestSegment(e.center.x, e.center.y);
 });
 
-hammertime.on("panstart panend panmove pancancel", (e) => {
-  if (e.type === "panstart") {
+hammertime.on('panstart panend panmove pancancel', (e) => {
+  if (e.type === 'panstart') {
     if (mouseDown) {
       onMouseup();
     }
     onMousedown(e.center.x, e.center.y, null);
-  } else if (e.type === "panend" || e.type === "pancancel") {
+  } else if (e.type === 'panend' || e.type === 'pancancel') {
     onMouseup();
-  } else if (e.type === "panmove") {
+  } else if (e.type === 'panmove') {
     if (e.srcEvent instanceof MouseEvent) {
       onMousemove(e.srcEvent);
     } else {
-      console.log("NO NO NO bad move", e.srcEvent);
+      console.log('NO NO NO bad move', e.srcEvent);
     }
   }
 });
-hammertime.get("pinch").set({ enable: true });
-hammertime.on("pinchend pinchcancel", function (event) {
+hammertime.get('pinch').set({ enable: true });
+hammertime.on('pinchend pinchcancel', function (event) {
   mouseDown = false;
 });
 
-hammertime.on("pinch", function (event) {
+hammertime.on('pinch', function (event) {
   if (!mouseDown) {
     mouseDown = true;
     pinchStart = scale;
@@ -734,7 +734,7 @@ function handleSelection() {
   const x = (mouse.x - xShift) / scale;
   const y = (mouse.y - yShift) / scale;
   let dist = Infinity;
-  let closestKey = "";
+  let closestKey = '';
   for (const key in puzzle.vertices) {
     const vertex = puzzle.vertices[key];
     if (
@@ -812,7 +812,7 @@ function handleDrag() {
   const x = (mouse.x - xShift) / scale;
   const y = (mouse.y - yShift) / scale;
   let dist = Infinity;
-  let closestKey = "";
+  let closestKey = '';
   for (const key in puzzle.vertices) {
     const vertex = puzzle.vertices[key];
     if (vertex === clicked) continue;

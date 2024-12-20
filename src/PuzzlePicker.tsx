@@ -1,9 +1,9 @@
-import React from "react";
-import { createGame } from "./main";
-import testPuzzle from "./test.json";
-import puzzleDates from "./puzzle-dates.json";
-import dayjs, { Dayjs } from "dayjs";
-import "./PuzzlePicker.scss";
+import React from 'react';
+import { createGame } from './main';
+import testPuzzle from './test.json';
+import puzzleDates from './puzzle-dates.json';
+import dayjs, { Dayjs } from 'dayjs';
+import './PuzzlePicker.scss';
 
 type State = {
   chosenDate: Dayjs;
@@ -16,7 +16,7 @@ type Props = {
 
 const MIN_YEAR = 2019;
 const MAX_YEAR = 2024;
-const YEAR_KEY = "picker-year";
+const YEAR_KEY = 'picker-year';
 
 export default class PuzzlePicker extends React.PureComponent<Props, State> {
   constructor(props: Props) {
@@ -36,20 +36,20 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
   onSelect = async () => {
     if (this.state.chosenDate) {
       let response = await fetch(
-        `./data/${this.state.chosenDate.format("YYYY-MM-DD")}.json`
+        `./data/${this.state.chosenDate.format('YYYY-MM-DD')}.json`
       );
       createGame(await response.json());
     } else {
       createGame(testPuzzle);
     }
     try {
-      if (window.location.host.indexOf("localhost") === -1) {
+      if (window.location.host.indexOf('localhost') === -1) {
         await document.documentElement.requestFullscreen({
-          navigationUI: "hide",
+          navigationUI: 'hide',
         });
       }
     } catch (e) {
-      console.log("Exception from requestFullScreen", e);
+      console.log('Exception from requestFullScreen', e);
     }
     this.props.onHide();
   };
@@ -67,7 +67,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
     for (const i in puzzleDates) {
       const thisDate = dayjs(puzzleDates[i]);
       if (thisDate.year() === target.year()) {
-        const diff = Math.abs(thisDate.diff(target, "day"));
+        const diff = Math.abs(thisDate.diff(target, 'day'));
         if (diff < bestDiff) {
           bestDiff = diff;
           best = thisDate;
@@ -92,7 +92,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
 
   adjustDate = (delta: number) => {
     const existingI = puzzleDates.indexOf(
-      this.state.chosenDate.format("YYYY-MM-DD")
+      this.state.chosenDate.format('YYYY-MM-DD')
     );
     const newI = existingI + delta;
     if (newI < 0 || newI >= puzzleDates.length) {
@@ -115,7 +115,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
             >
               &lt;&lt; Prev Year
             </button>
-            <div>{chosenDate.format("MMMM D, YYYY")}</div>
+            <div>{chosenDate.format('MMMM D, YYYY')}</div>
             <button
               disabled={chosenYear === MAX_YEAR}
               onClick={() => this.adjustYear(1)}

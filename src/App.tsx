@@ -1,5 +1,5 @@
-import { useState } from "react";
-import PuzzlePicker from "./PuzzlePicker";
+import { useState } from 'react';
+import PuzzlePicker from './PuzzlePicker';
 
 const App = () => {
   const [showPicker, setShowPicker] = useState(true);
