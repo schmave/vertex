@@ -42,6 +42,15 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
     } else {
       createGame(testPuzzle);
     }
+    try {
+      if (window.location.host.indexOf("localhost") === -1) {
+        await document.documentElement.requestFullscreen({
+          navigationUI: "hide",
+        });
+      }
+    } catch (e) {
+      console.log("Exception from requestFullScreen", e);
+    }
     this.props.onHide();
   };
 
