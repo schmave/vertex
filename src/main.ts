@@ -115,6 +115,19 @@ function loadCompletedStrokes() {
   renderShapes();
 }
 
+if (import.meta.hot) {
+  import.meta.hot.accept((newModule) => {
+    if (newModule) {
+      console.warn("HOT UPDATE main.ts -- things will be broken now");
+      // This is a step in the right direction
+      // newModule.createGame(puzzle);
+    }
+  });
+  import.meta.hot.dispose((data) => {
+    // TODO: remove event listeners?
+  });
+}
+
 export function createGame(puzzleData: Puzzle) {
   puzzle = puzzleData;
   for (const vertexId in puzzle.vertices) {
@@ -609,22 +622,17 @@ function zoom(newScale: number, focusX: number, focusY: number) {
   }
   const x = (focusX - xShift) / scale; // mouse x in puzzle coordinates
   const newX = newScale * x + xShift; // screen x of same puzzle coordinates in new scale
-  const maxX = scale * extents.maxX + xShift;
-  const minX = scale * extents.minX + xShift;
-  xShift -= Math.max(Math.min(newX, maxX), minX) - focusX; // difference between new screen x (which cannot exceed min/max of puzzle) and mouse x
+  xShift -= newX - focusX; // difference between new screen x (which cannot exceed min/max of puzzle) and mouse x
 
   const y = (focusY - yShift) / scale;
   const newY = newScale * y + yShift;
-  const maxY = scale * extents.maxY + yShift;
-  const minY = scale * extents.minY + yShift;
-  yShift -= Math.max(Math.min(newY, maxY), minY) - focusY;
+  yShift -= newY - focusY;
   scale = newScale;
   render();
 }
 let pinchStart: number = scale;
 const hammertime = new Hammer(uiCanvas);
-hammertime.get("press").set({ threshold: 1, time: 50 });
-hammertime.get("pan").set({ threshold: 1, direction: Hammer.DIRECTION_ALL });
+hammertime.get("pan").set({ threshold: 3, direction: Hammer.DIRECTION_ALL });
 
 hammertime.on("doubletap", (e) => {
   removeClosestSegment(e.center.x, e.center.y);
@@ -647,6 +655,10 @@ hammertime.on("panstart panend panmove pancancel", (e) => {
   }
 });
 hammertime.get("pinch").set({ enable: true });
+hammertime.on("pinchend pinchcancel", function (event) {
+  mouseDown = false;
+});
+
 hammertime.on("pinch", function (event) {
   if (!mouseDown) {
     mouseDown = true;
