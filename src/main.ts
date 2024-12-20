@@ -301,14 +301,10 @@ function getPointSize(key: string) {
   const number =
     getStrokesAtPoint(key).length - getCompletedStrokesAtPoint(key).length;
   const size = number < 4 ? 12 : number < 7 ? 18 : 24;
-  const result = size * canvasScale * 1;
   // This was the old way of adjusting the size of the points a little bit based
   // on the current zoom.
   // Math.min(0.2 * scale + 0.8, 1.75);
-  if (number === 7) {
-    console.log(number, size, result);
-  }
-  return result;
+  return size * canvasScale * 1;
 }
 
 function renderStrokes() {
