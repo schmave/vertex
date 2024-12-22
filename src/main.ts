@@ -108,19 +108,35 @@ export const goFullscreen = () =>
   });
 fullscreenElement.addEventListener('click', goFullscreen);
 
-function saveCompletedStrokes() {
+export interface PuzzleState {
+  numCompletedShapes: number;
+  strokes: [number, number][];
+}
+
+function saveState() {
   localStorage.setItem(
-    `strokes-${puzzle.id}`,
-    JSON.stringify(
-      completedStrokes.map((stroke) => [stroke[0].id, stroke[1].id])
-    )
+    `puzzle-${puzzle.id}`,
+    JSON.stringify({
+      numCompletedShapes: puzzle.shapes.filter((shape) => shape.completed)
+        .length,
+      strokes: completedStrokes.map((stroke) => [stroke[0].id, stroke[1].id]),
+    } as PuzzleState)
   );
 }
 
-function loadCompletedStrokes() {
-  const data = localStorage.getItem(`strokes-${puzzle.id}`);
+export function readState(puzzleId: string): PuzzleState | undefined {
+  const data = localStorage.getItem(`puzzle-${puzzleId}`);
+  let state;
   if (data) {
-    const strokeData: [number, number][] = JSON.parse(data);
+    state = JSON.parse(data) as PuzzleState;
+  }
+  return state;
+}
+
+function loadState(puzzleId: string) {
+  const state = readState(puzzleId);
+  if (state) {
+    const strokeData = state.strokes;
     completedStrokes = [];
     for (const strokeI in strokeData) {
       const stroke = strokeData[strokeI];
@@ -158,7 +174,7 @@ export function createGame(puzzleData: Puzzle) {
   for (const vertexId in puzzle.vertices) {
     puzzle.vertices[vertexId].id = parseInt(vertexId, 10);
   }
-  loadCompletedStrokes();
+  loadState(puzzle.id);
 
   extents = getExtents();
   if (
@@ -618,9 +634,9 @@ function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
     return false;
   }
   completedStrokes.push(stroke);
-  saveCompletedStrokes();
   undoElement.classList.remove('disabled');
   render();
+  saveState();
   return true;
 }
 
@@ -654,8 +670,8 @@ function undoStroke() {
       break;
     }
   }
-  saveCompletedStrokes();
   render();
+  saveState();
 }
 
 function onKeyup(event: KeyboardEvent) {

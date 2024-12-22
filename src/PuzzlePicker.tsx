@@ -1,5 +1,5 @@
 import React from 'react';
-import { createGame, goFullscreen } from './main';
+import { createGame, goFullscreen, readState } from './main';
 import testPuzzle from './test.json';
 import puzzleDirectory from './puzzle-toc.json';
 import dayjs, { Dayjs } from 'dayjs';
@@ -124,6 +124,15 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
     this.setDate(dayjs(puzzleDirectory[newI].date));
   };
 
+  renderCompletion = (numCompleted: number | undefined, total: number) => {
+    if (!numCompleted) {
+      return <div>--</div>;
+    }
+    return (
+      <div>{Math.floor((100 * (numCompleted || 0)) / total)}% complete</div>
+    );
+  };
+
   render() {
     const { chosenYear, chosenDate, chosenPuzzle } = this.state;
 
@@ -131,6 +140,8 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
     for (let y = MIN_YEAR; y <= MAX_YEAR; y++) {
       years.push(y);
     }
+
+    const puzzleState = readState(chosenPuzzle.id);
 
     return (
       <div id="overlay">
@@ -173,6 +184,10 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
                 </span>
               </div>
               <i>{chosenPuzzle.theme}</i>
+              {this.renderCompletion(
+                puzzleState?.numCompletedShapes,
+                chosenPuzzle.numShapes
+              )}
             </div>
             <button className="date" onClick={() => this.adjustDate(1)}>
               &gt;&gt;
