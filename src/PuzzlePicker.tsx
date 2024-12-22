@@ -119,10 +119,11 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
         <div className="puzzle-picker">
           <h1>Vertex Archive</h1>
           <div style={{ textAlign: 'center' }}>
-            <div>Jump to today's puzzle from year:</div>
+            <div>Jump to {dayjs().format('MMM. DD')} in the year:</div>
             <div className="row">
               {years.map((y) => (
                 <button
+                  key={y}
                   style={{ color: 'white' }}
                   className={getClass(y)}
                   onClick={() => this.setYear(y)}
@@ -156,7 +157,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
             }}
             onClick={this.onSelect}
           >
-            Play!
+            Open Drawing
           </button>
         </div>
       </div>

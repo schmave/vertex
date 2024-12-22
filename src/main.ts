@@ -223,7 +223,7 @@ export function createGame(puzzleData: Puzzle) {
 
   constructorElement.innerText = puzzle.puzzleConstructor;
   themeElement.innerText = puzzle.theme;
-  dateElement.innerText = dayjs(puzzle.date).format('dddd,	MMMM DD, YYYY');
+  dateElement.innerText = dayjs(puzzle.date).format('MMMM DD, YYYY');
 
   setCanvasSizes();
   render();
