@@ -169,6 +169,47 @@ if (import.meta.hot) {
   });
 }
 
+function rescalePuzzle() {
+  extents = getExtents();
+  const margin = 60 * canvasScale;
+
+  const screenWidth = document.documentElement.clientWidth * canvasScale;
+  const screenHeight = document.documentElement.clientHeight * canvasScale;
+
+  // const addX = margin - extents.minX;
+  // const addY = margin - extents.minY;
+  const scaleFactor = Math.min(
+    (screenWidth - 2 * margin) / (extents.maxX - extents.minX),
+    (screenHeight - 2 * margin) / (extents.maxY - extents.minY)
+  );
+
+  // console.log('extents', extents, 'addX', addX, 'addY', addY, 'scale', scale);
+  console.log('extents', extents, 'scale', scaleFactor);
+
+  Object.values(puzzle.vertices).forEach((vertex) => {
+    const [x, y] = vertex.coordinates;
+    vertex.coordinates[0] = (x - extents.minX) * scaleFactor + margin;
+    vertex.coordinates[1] = (y - extents.minY) * scaleFactor + margin;
+  });
+
+  extents = getExtents();
+  console.log('new extents', extents);
+
+  xShift = 0;
+  yShift = 0;
+
+  const extraX = screenWidth - margin - extents.maxX;
+  const extraY = screenHeight - margin - extents.maxY;
+  console.log('extras', extraX, extraY);
+  Object.values(puzzle.vertices).forEach((vertex) => {
+    vertex.coordinates[0] += extraX / 2;
+  });
+  Object.values(puzzle.vertices).forEach((vertex) => {
+    vertex.coordinates[1] += extraY / 2;
+  });
+  scale = 1;
+}
+
 export function createGame(puzzleData: Puzzle) {
   puzzle = puzzleData;
   for (const vertexId in puzzle.vertices) {
@@ -176,33 +217,7 @@ export function createGame(puzzleData: Puzzle) {
   }
   loadState(puzzle.id);
 
-  extents = getExtents();
-  if (
-    ((extents.maxX - extents.minX) * (extents.maxY - extents.minY)) /
-      (document.documentElement.clientWidth *
-        canvasScale *
-        document.documentElement.clientHeight *
-        canvasScale) <
-    0.25
-  ) {
-    console.log('doubling');
-    //double coordinates of vertices
-    for (const key in puzzle.vertices) {
-      puzzle.vertices[key].coordinates = puzzle.vertices[key].coordinates.map(
-        (coord) => coord * 2
-      );
-    }
-    extents = getExtents();
-  }
-
-  xShift =
-    -extents.minX +
-    (document.documentElement.clientWidth * canvasScale) / 2 -
-    (extents.maxX - extents.minX) / 2;
-  yShift =
-    -extents.minY +
-    (document.documentElement.clientHeight * canvasScale) / 2 -
-    (extents.maxY - extents.minY) / 2;
+  rescalePuzzle();
 
   window.visualViewport?.addEventListener('resize', onResize);
   window.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -224,14 +239,14 @@ export function createGame(puzzleData: Puzzle) {
   undoElement.addEventListener('click', undoStroke);
   zoomElement.children[0]?.addEventListener('click', () =>
     zoom(
-      scale + 0.4,
+      scale + 0.2,
       (document.documentElement.clientWidth * canvasScale) / 2,
       (document.documentElement.clientHeight * canvasScale) / 2
     )
   );
   zoomElement.children[1]?.addEventListener('click', () =>
     zoom(
-      scale - 0.4,
+      scale - 0.2,
       (document.documentElement.clientWidth * canvasScale) / 2,
       (document.documentElement.clientHeight * canvasScale) / 2
     )
@@ -641,6 +656,7 @@ function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
 }
 
 function onResize() {
+  rescalePuzzle();
   setCanvasSizes();
   render();
 }
