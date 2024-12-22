@@ -35,12 +35,9 @@ canvas {
   display: flex;
 }
 .info {
-  display: grid;
-  grid-template-columns: 25% 50% 25%;
+  display: flex;
   position: absolute;
-  justify-content: space-between;
-  align-items: center;
-  text-align: center;
+  align-items: baseline;
   top: 0;
   left: 0;
   width: 100%;
@@ -50,17 +47,22 @@ canvas {
   color: var(--black);
   font-size: 15px;
   box-sizing: border-box;
-  padding: 0 20px;
+  padding: 5px 20px 0 20px;
 }
-#constructor {
-  text-align: left;
+#constructor, #date {
+  flex: 0 0 150px;
 }
 #date {
   text-align: right;
 }
-.info #theme {
+#theme {
+  flex: 1 1 0%;
   font-weight: bold;
   font-size: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  text-align: center;
 }
 @media screen and (max-width: 700px) {
   .info {
