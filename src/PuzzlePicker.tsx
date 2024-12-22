@@ -1,13 +1,22 @@
 import React from 'react';
 import { createGame, goFullscreen } from './main';
 import testPuzzle from './test.json';
-import puzzleDates from './puzzle-dates.json';
+import puzzleDirectory from './puzzle-toc.json';
 import dayjs, { Dayjs } from 'dayjs';
 import './PuzzlePicker.scss';
+
+interface PuzzleInfo {
+  date: string;
+  id: string;
+  numShapes: number;
+  puzzleConstructor: string;
+  theme: string;
+}
 
 type State = {
   chosenDate: Dayjs;
   chosenYear: number;
+  chosenPuzzle: PuzzleInfo;
 };
 
 type Props = {
@@ -21,6 +30,12 @@ const LAST_PUZZLE_KEY = 'picker-date';
 
 const getClass = (year: number) => `y-${year}`;
 
+function findPuzzle(date: Dayjs): PuzzleInfo {
+  return puzzleDirectory.find(
+    (puzzle) => puzzle.date === date.format('YYYY-MM-DD')
+  )!;
+}
+
 export default class PuzzlePicker extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -31,12 +46,14 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
       : MIN_YEAR;
 
     const dateFromStorage = localStorage.getItem(LAST_PUZZLE_KEY);
+    const chosenDate = dateFromStorage
+      ? dayjs(dateFromStorage)
+      : this.getClosestPuzzle(chosenYear);
 
     this.state = {
       chosenYear,
-      chosenDate: dateFromStorage
-        ? dayjs(dateFromStorage)
-        : this.getClosestPuzzle(chosenYear),
+      chosenDate,
+      chosenPuzzle: findPuzzle(chosenDate),
     };
   }
 
@@ -67,8 +84,8 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
 
     const target = startingDate.year(year);
 
-    for (const i in puzzleDates) {
-      const thisDate = dayjs(puzzleDates[i]);
+    puzzleDirectory.forEach((puzzle) => {
+      const thisDate = dayjs(puzzle.date);
       if (thisDate.year() === target.year()) {
         const diff = Math.abs(thisDate.diff(target, 'day'));
         if (diff < bestDiff) {
@@ -76,7 +93,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
           best = thisDate;
         }
       }
-    }
+    });
 
     return best!;
   };
@@ -85,6 +102,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
     this.setState({
       chosenYear: newDate.year(),
       chosenDate: newDate,
+      chosenPuzzle: findPuzzle(newDate),
     });
     localStorage.setItem(YEAR_KEY, newDate.year().toString());
     localStorage.setItem(LAST_PUZZLE_KEY, newDate.format('YYYY-MM-DD'));
@@ -95,19 +113,19 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
   };
 
   adjustDate = (delta: number) => {
-    const existingI = puzzleDates.indexOf(
-      this.state.chosenDate.format('YYYY-MM-DD')
+    const existingI = puzzleDirectory.findIndex(
+      (puzzle) => puzzle.date === this.state.chosenDate.format('YYYY-MM-DD')
     );
     const newI = existingI + delta;
-    if (newI < 0 || newI >= puzzleDates.length) {
+    if (newI < 0 || newI >= puzzleDirectory.length) {
       return;
     }
 
-    this.setDate(dayjs(puzzleDates[newI]));
+    this.setDate(dayjs(puzzleDirectory[newI].date));
   };
 
   render() {
-    const { chosenYear, chosenDate } = this.state;
+    const { chosenYear, chosenDate, chosenPuzzle } = this.state;
 
     const years = [];
     for (let y = MIN_YEAR; y <= MAX_YEAR; y++) {
@@ -135,19 +153,29 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
           </div>
           <div className="row">
             <button className="date" onClick={() => this.adjustDate(-1)}>
-              -1 day
+              &lt;&lt;
             </button>
-            <p>
-              {chosenDate.format('MMMM D')},{' '}
-              <span
-                className={getClass(chosenYear)}
-                style={{ padding: '2px', color: 'white' }}
-              >
-                {chosenYear}
-              </span>
-            </p>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                minWidth: 200,
+              }}
+            >
+              <div>
+                {chosenDate.format('MMMM D')},{' '}
+                <span
+                  className={getClass(chosenYear)}
+                  style={{ padding: '2px', color: 'white' }}
+                >
+                  {chosenYear}
+                </span>
+              </div>
+              <i>{chosenPuzzle.theme}</i>
+            </div>
             <button className="date" onClick={() => this.adjustDate(1)}>
-              +1 day
+              &gt;&gt;
             </button>
           </div>
           <button
