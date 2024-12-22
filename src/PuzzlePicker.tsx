@@ -162,6 +162,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
               ))}
             </div>
           </div>
+          <hr style={{ width: '100%' }} />
           <div className="row">
             <button className="date" onClick={() => this.adjustDate(-1)}>
               &lt;&lt;
@@ -193,6 +194,7 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
               &gt;&gt;
             </button>
           </div>
+          <hr style={{ width: '100%' }} />
           <button
             style={{
               fontSize: '1.3em',
