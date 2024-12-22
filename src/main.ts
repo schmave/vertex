@@ -438,6 +438,7 @@ function renderShapes() {
     }
     if (shape.completed) {
       fillCtx.fillStyle = puzzle.palette[parseInt(shape.color)];
+      fillCtx.strokeStyle = puzzle.palette[parseInt(shape.color)];
       fillCtx.beginPath();
       fillCtx.moveTo(
         scale * puzzle.vertices[shape.vertices[0]].coordinates[0] + xShift,
@@ -453,6 +454,7 @@ function renderShapes() {
       );
       fillCtx.closePath();
       fillCtx.fill();
+      fillCtx.stroke();
     }
   }
   if (allCompleted) {
