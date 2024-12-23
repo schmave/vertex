@@ -100,8 +100,9 @@ canvas {
 #back {
   bottom: 5px;
   width: fit-content;
-  height: 30px;
-  font-size: 11px;
+  top: 50px;
+  left: unset;
+  right: 30px;
 }
 
 #zoom {
