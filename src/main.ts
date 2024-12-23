@@ -52,7 +52,7 @@ interface Puzzle {
 type Stroke = [Vertex, Vertex];
 
 let completedStrokes: Stroke[] = [];
-let completed = false;
+let gCompleted = false;
 
 const canvasScale = Math.ceil(window.devicePixelRatio);
 const fillCanvas = <HTMLCanvasElement>document.getElementById('fill');
@@ -176,15 +176,10 @@ function rescalePuzzle() {
   const screenWidth = document.documentElement.clientWidth * canvasScale;
   const screenHeight = document.documentElement.clientHeight * canvasScale;
 
-  // const addX = margin - extents.minX;
-  // const addY = margin - extents.minY;
   const scaleFactor = Math.min(
     (screenWidth - 2 * margin) / (extents.maxX - extents.minX),
     (screenHeight - 2 * margin) / (extents.maxY - extents.minY)
   );
-
-  // console.log('extents', extents, 'addX', addX, 'addY', addY, 'scale', scale);
-  console.log('extents', extents, 'scale', scaleFactor);
 
   Object.values(puzzle.vertices).forEach((vertex) => {
     const [x, y] = vertex.coordinates;
@@ -193,31 +188,30 @@ function rescalePuzzle() {
   });
 
   extents = getExtents();
-  console.log('new extents', extents);
 
   xShift = 0;
   yShift = 0;
-
-  const extraX = screenWidth - margin - extents.maxX;
-  const extraY = screenHeight - margin - extents.maxY;
-  console.log('extras', extraX, extraY);
-  Object.values(puzzle.vertices).forEach((vertex) => {
-    vertex.coordinates[0] += extraX / 2;
-  });
-  Object.values(puzzle.vertices).forEach((vertex) => {
-    vertex.coordinates[1] += extraY / 2;
-  });
   scale = 1;
+
+  const extraX = (screenWidth - margin - extents.maxX) / 2;
+  const extraY = (screenHeight - margin - extents.maxY) / 2;
+  Object.values(puzzle.vertices).forEach((vertex) => {
+    vertex.coordinates[0] += extraX;
+  });
+  Object.values(puzzle.vertices).forEach((vertex) => {
+    vertex.coordinates[1] += extraY;
+  });
 }
 
 export function createGame(puzzleData: Puzzle) {
   puzzle = puzzleData;
+
+  rescalePuzzle();
+
   for (const vertexId in puzzle.vertices) {
     puzzle.vertices[vertexId].id = parseInt(vertexId, 10);
   }
   loadState(puzzle.id);
-
-  rescalePuzzle();
 
   window.visualViewport?.addEventListener('resize', onResize);
   window.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -358,7 +352,7 @@ function getPointSize(key: string) {
 
 function renderStrokes() {
   strokeCtx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height);
-  if (completed) return;
+  if (gCompleted) return;
   for (const stroke of completedStrokes) {
     strokeCtx.strokeStyle = 'black';
     strokeCtx.lineWidth = 1;
@@ -394,7 +388,7 @@ function renderShapes() {
       ])
     ) {
       shape.completed = true;
-    } else if (completed) {
+    } else if (gCompleted) {
       shape.completed = true;
     } else {
       allCompleted = false;
@@ -439,6 +433,7 @@ function renderShapes() {
     if (shape.completed) {
       fillCtx.fillStyle = puzzle.palette[parseInt(shape.color)];
       fillCtx.strokeStyle = puzzle.palette[parseInt(shape.color)];
+      fillCtx.lineJoin = 'round';
       fillCtx.beginPath();
       fillCtx.moveTo(
         scale * puzzle.vertices[shape.vertices[0]].coordinates[0] + xShift,
@@ -457,17 +452,55 @@ function renderShapes() {
       fillCtx.stroke();
     }
   }
-  if (allCompleted) {
-    completed = true;
-    renderStrokes();
-    renderPoints();
-    renderCursor();
-    renderUI();
+  if (allCompleted && !gCompleted) {
+    gCompleted = true;
+    startEndAnimation();
+    render();
   }
 }
+
+let gAnimationFramesRemaining = 0;
+const ANIMATION_TIMEOUT_LENGTH = 30;
+const ANIMATION_NUM_FRAMES = 1000 / ANIMATION_TIMEOUT_LENGTH;
+let gAnimate = {
+  x: 0,
+  y: 0,
+  scale: 0,
+};
+
+function doAnimation() {
+  gAnimationFramesRemaining--;
+
+  xShift += gAnimate.x;
+  yShift += gAnimate.y;
+  scale += gAnimate.scale;
+
+  if (gAnimationFramesRemaining > 0) {
+    setTimeout(doAnimation, ANIMATION_TIMEOUT_LENGTH);
+  } else {
+    xShift = yShift = 0;
+    scale = 1;
+  }
+
+  render();
+}
+
+function startEndAnimation() {
+  document.getElementById('message')!.style.display = 'block';
+  gAnimationFramesRemaining = ANIMATION_NUM_FRAMES;
+
+  gAnimate = {
+    x: -xShift / ANIMATION_NUM_FRAMES,
+    y: -yShift / ANIMATION_NUM_FRAMES,
+    scale: (1 - scale) / ANIMATION_NUM_FRAMES,
+  };
+
+  doAnimation();
+}
+
 function renderPoints() {
   pointsCtx.clearRect(0, 0, pointsCanvas.width, pointsCanvas.height);
-  if (completed) return;
+  if (gCompleted) return;
   for (const key in puzzle.vertices) {
     const vertex = puzzle.vertices[key];
     const strokes =
@@ -534,7 +567,7 @@ function renderPoints() {
 }
 function renderCursor() {
   cursorCtx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
-  if (completed) return;
+  if (gCompleted) return;
   if (clicked && mouseDown) {
     if (clicked.selected === 2) {
       cursorCtx.strokeStyle = '#e7ad34';
@@ -694,7 +727,10 @@ function undoStroke() {
 
 function onKeyup(event: KeyboardEvent) {
   if (event.key === 'Backspace' && completedStrokes.length > 0) {
-    undoStroke();
+    completedStrokes.splice(completedStrokes.length - 1, 1);
+    gCompleted = false;
+    saveState();
+    render();
   }
 }
 

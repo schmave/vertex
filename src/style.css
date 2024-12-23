@@ -55,6 +55,11 @@ canvas {
 #date {
   text-align: right;
 }
+#message {
+  position: absolute;
+  bottom: 10px;
+  left: 75%;
+}
 #theme {
   flex: 1 1 0%;
   font-weight: bold;
