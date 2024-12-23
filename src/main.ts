@@ -757,7 +757,7 @@ function zoom(newScale: number, focusX: number, focusY: number) {
 }
 let pinchStart: number = scale;
 const hammertime = new Hammer(uiCanvas);
-hammertime.get('pan').set({ threshold: 3, direction: Hammer.DIRECTION_ALL });
+hammertime.get('pan').set({ threshold: 10, direction: Hammer.DIRECTION_ALL });
 
 hammertime.on('panstart panend panmove pancancel', (e) => {
   if (e.type === 'panstart') {
@@ -785,7 +785,7 @@ hammertime.on('pinch', function (event) {
     mouseDown = true;
     pinchStart = scale;
   }
-  const newScale = pinchStart + (event.scale - 1);
+  const newScale = pinchStart * event.scale;
 
   const focusX = event.center.x * canvasScale;
   const focusY = event.center.y * canvasScale;
