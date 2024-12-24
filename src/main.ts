@@ -171,7 +171,7 @@ if (import.meta.hot) {
 
 function rescalePuzzle() {
   extents = getExtents();
-  const margin = 60 * canvasScale;
+  const margin = 90 * canvasScale;
 
   const screenWidth = document.documentElement.clientWidth * canvasScale;
   const screenHeight = document.documentElement.clientHeight * canvasScale;
