@@ -480,6 +480,8 @@ function doAnimation() {
   } else {
     xShift = yShift = 0;
     scale = 1;
+    document.getElementById('message')!.style.transform =
+      'translate(-150%, 0px)';
   }
 
   render();
@@ -487,6 +489,7 @@ function doAnimation() {
 
 function startEndAnimation() {
   document.getElementById('message')!.style.display = 'block';
+  document.getElementById('message')!.style.transform = '';
   gAnimationFramesRemaining = ANIMATION_NUM_FRAMES;
 
   gAnimate = {
@@ -616,33 +619,35 @@ function renderUI() {
   uiCtx.stroke();
 
   // triangle
-  const triangleHeight = 40 * canvasScale;
-  const triangleWidth = 50 * canvasScale;
-  uiCtx.beginPath();
-  uiCtx.moveTo(uiCanvas.width / 2, footerTop - triangleHeight / 2);
-  uiCtx.lineTo(
-    uiCanvas.width / 2 - triangleWidth / 2,
-    footerTop + triangleHeight / 2
-  );
-  uiCtx.lineTo(
-    uiCanvas.width / 2 + triangleWidth / 2,
-    footerTop + triangleHeight / 2
-  );
-  uiCtx.closePath();
-  uiCtx.fill();
-  uiCtx.stroke();
+  if (!gCompleted) {
+    const triangleHeight = 40 * canvasScale;
+    const triangleWidth = 50 * canvasScale;
+    uiCtx.beginPath();
+    uiCtx.moveTo(uiCanvas.width / 2, footerTop - triangleHeight / 2);
+    uiCtx.lineTo(
+      uiCanvas.width / 2 - triangleWidth / 2,
+      footerTop + triangleHeight / 2
+    );
+    uiCtx.lineTo(
+      uiCanvas.width / 2 + triangleWidth / 2,
+      footerTop + triangleHeight / 2
+    );
+    uiCtx.closePath();
+    uiCtx.fill();
+    uiCtx.stroke();
 
-  uiCtx.textBaseline = 'middle';
-  uiCtx.fillStyle = 'black';
-  uiCtx.font = `${14 * canvasScale}px Inter`;
-  uiCtx.textAlign = 'center';
-  uiCtx.fillText(
-    puzzle.shapes
-      .filter((shape) => !shape.isPreDrawn && !shape.completed)
-      .length.toString(),
-    uiCanvas.width / 2,
-    footerTop + 7 * canvasScale
-  );
+    uiCtx.textBaseline = 'middle';
+    uiCtx.fillStyle = 'black';
+    uiCtx.font = `${14 * canvasScale}px Inter`;
+    uiCtx.textAlign = 'center';
+    uiCtx.fillText(
+      puzzle.shapes
+        .filter((shape) => !shape.isPreDrawn && !shape.completed)
+        .length.toString(),
+      uiCanvas.width / 2,
+      footerTop + 7 * canvasScale
+    );
+  }
 }
 function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
   // LINES CANNOT CROSS!!!!
@@ -764,7 +769,7 @@ hammertime.on('panstart panend panmove pancancel', (e) => {
     if (mouseDown) {
       onMouseup();
     }
-    onMousedown(e.center.x, e.center.y, null);
+    onMousedown(e.center.x - e.deltaX, e.center.y - e.deltaY, null);
   } else if (e.type === 'panend' || e.type === 'pancancel') {
     onMouseup();
   } else if (e.type === 'panmove') {

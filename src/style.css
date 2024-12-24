@@ -58,7 +58,9 @@ canvas {
 #message {
   position: absolute;
   bottom: 10px;
-  left: 75%;
+  left:100%;
+  white-space: nowrap;
+  transition: all 1s;
 }
 #theme {
   flex: 1 1 0%;
