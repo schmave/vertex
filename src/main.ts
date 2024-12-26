@@ -837,7 +837,7 @@ function onMousedown(x: number, y: number, button: number | null) {
   handleSelection();
 }
 
-let hovered: Vertex;
+let gHovered: Vertex;
 function handleSelection() {
   const x = (mouse.x - xShift) / scale;
   const y = (mouse.y - yShift) / scale;
@@ -871,15 +871,15 @@ function handleSelection() {
         clicked = null;
       }
     } else {
-      if (hovered && hovered !== puzzle.vertices[closestKey]) {
-        hovered.selected = 0;
+      if (gHovered && gHovered !== puzzle.vertices[closestKey]) {
+        gHovered.selected = 0;
       }
-      hovered = puzzle.vertices[closestKey];
-      hovered.selected = 1;
+      gHovered = puzzle.vertices[closestKey];
+      gHovered.selected = 1;
     }
     renderPoints();
-  } else if (hovered && hovered.selected !== 0) {
-    hovered.selected = 0;
+  } else if (gHovered && gHovered.selected !== 0) {
+    gHovered.selected = 0;
     renderPoints();
   }
   renderCursor();
@@ -896,6 +896,11 @@ function onMouseup() {
   clicked = null;
   if (selected) selected.selected = 0;
   selected = null;
+  if (gHovered) {
+    // Sometimes vertices remain drawn in black after a drag is complete. Hopefully
+    // this fixes it?
+    gHovered.selected = 0;
+  }
   renderCursor();
   renderPoints();
 }
