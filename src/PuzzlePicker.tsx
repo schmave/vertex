@@ -1,5 +1,5 @@
 import React from 'react';
-import { createGame, goFullscreen, readState } from './main';
+import { createGame, readState } from './main';
 import testPuzzle from './test.json';
 import puzzleDirectory from './puzzle-toc.json';
 import dayjs, { Dayjs } from 'dayjs';
@@ -65,13 +65,6 @@ export default class PuzzlePicker extends React.PureComponent<Props, State> {
       createGame(await response.json());
     } else {
       createGame(testPuzzle);
-    }
-    try {
-      if (window.location.host.indexOf('localhost') === -1) {
-        await goFullscreen();
-      }
-    } catch (e) {
-      console.log('Exception from requestFullScreen', e);
     }
     this.props.onHide();
   };
