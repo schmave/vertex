@@ -310,15 +310,19 @@ function getStrokesAtPoint(vertex: Vertex | string): Stroke[] {
   }
   return (vertex.strokes = strokes);
 }
-function getCompletedStrokesAtPoint(vertex: Vertex | string): Stroke[] {
+function getNumCompletedStrokesAtPoint(vertex: Vertex | string): number {
   if (typeof vertex === 'string') {
     vertex = puzzle.vertices[vertex];
   }
-  const strokes: Stroke[] = completedStrokes.filter(
-    (stroke) => stroke[0] === vertex || stroke[1] === vertex
-  );
 
-  return strokes;
+  let result = 0;
+  for (let i = 0; i < completedStrokes.length; i++) {
+    const stroke = completedStrokes[i];
+    if (stroke[0] === vertex || stroke[1] === vertex) {
+      result++;
+    }
+  }
+  return result;
 }
 function isStrokeCompleted(stroke: Stroke) {
   return completedStrokes.find(
@@ -330,7 +334,7 @@ function isStrokeCompleted(stroke: Stroke) {
 
 function getPointSize(key: string) {
   const number =
-    getStrokesAtPoint(key).length - getCompletedStrokesAtPoint(key).length;
+    getStrokesAtPoint(key).length - getNumCompletedStrokesAtPoint(key);
   const size = number < 4 ? 12 : number < 7 ? 18 : 24;
   // This was the old way of adjusting the size of the points a little bit based
   // on the current zoom.
@@ -501,7 +505,7 @@ function renderPoints() {
   for (const key in puzzle.vertices) {
     const vertex = puzzle.vertices[key];
     const strokes =
-      getStrokesAtPoint(key).length - getCompletedStrokesAtPoint(key).length;
+      getStrokesAtPoint(key).length - getNumCompletedStrokesAtPoint(key);
 
     if (
       strokes === 0 &&
@@ -663,11 +667,9 @@ function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
 
   // DOES THE POINT HAVE ENOUGH REMAINING STROKES???
   if (
-    getStrokesAtPoint(vertex1).length -
-      getCompletedStrokesAtPoint(vertex1).length <
+    getStrokesAtPoint(vertex1).length - getNumCompletedStrokesAtPoint(vertex1) <
       1 ||
-    getStrokesAtPoint(vertex2).length -
-      getCompletedStrokesAtPoint(vertex2).length <
+    getStrokesAtPoint(vertex2).length - getNumCompletedStrokesAtPoint(vertex2) <
       1
   ) {
     return false;
@@ -851,7 +853,7 @@ function handleSelection() {
 
       const strokes =
         getStrokesAtPoint(clicked).length -
-        getCompletedStrokesAtPoint(clicked).length;
+        getNumCompletedStrokesAtPoint(clicked);
 
       if (strokes > 0) {
         clicked.selected = 1;
@@ -946,10 +948,20 @@ function handleDrag() {
   renderCursor();
 }
 
+let values: number[] = [];
+
 function render() {
   renderStrokes();
+  const a = performance.now();
   renderPoints();
+  const b = performance.now();
   renderShapes();
   renderCursor();
   renderUI();
+  values.push(b - a);
+  if (values.length > 30) {
+    const sum = values.reduce((x, y) => x + y);
+    console.log('sum of 30 renderPoints', Math.round(sum));
+    values = [];
+  }
 }
