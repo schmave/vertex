@@ -38,6 +38,7 @@ interface Vertex {
   // These properties are missing from the initial puzzle data
   id?: number;
   selected?: 0 | 1 | 2;
+  strokes?: Stroke[];
 }
 interface Puzzle {
   date: string;
@@ -284,6 +285,10 @@ function getStrokesAtPoint(vertex: Vertex | string): Stroke[] {
   if (typeof vertex === 'string') {
     vertex = puzzle.vertices[vertex];
   }
+  if (vertex.strokes !== undefined) {
+    return vertex.strokes;
+  }
+
   const strokes: Stroke[] = [];
   for (let shapeIdx of vertex.shapes) {
     for (let shapeVertex of puzzle.shapes[parseInt(shapeIdx)].vertices) {
@@ -303,7 +308,7 @@ function getStrokesAtPoint(vertex: Vertex | string): Stroke[] {
       strokes.push(stroke);
     }
   }
-  return strokes;
+  return (vertex.strokes = strokes);
 }
 function getCompletedStrokesAtPoint(vertex: Vertex | string): Stroke[] {
   if (typeof vertex === 'string') {
