@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import Hammer from 'hammerjs';
+import throttle from 'lodash/throttle';
 
 interface Vector {
   x: number;
@@ -950,7 +951,7 @@ function handleDrag() {
 
 let values: number[] = [];
 
-function render() {
+function baseRender() {
   renderStrokes();
   const a = performance.now();
   renderPoints();
@@ -965,3 +966,6 @@ function render() {
     values = [];
   }
 }
+
+// Throttling render improves perceived performance on lower-end devices
+const render = throttle(baseRender, 30);
