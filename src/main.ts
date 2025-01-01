@@ -210,7 +210,7 @@ export function createGame(puzzleData: Puzzle) {
     }
   });
   uiCanvas.addEventListener('mousemove', (event) => {
-    if (!mouseDown) {
+    if (!mouseDown && !gIsTouchScreen) {
       onMousemove(event);
     }
   });
@@ -828,6 +828,18 @@ function onMousedown(x: number, y: number, button: number | null) {
   mouseDown = true;
   handleSelection();
 }
+
+let gIsTouchScreen = false;
+window.addEventListener(
+  'touchstart',
+  function setHasTouch() {
+    gIsTouchScreen = true;
+    // Remove event listener once fired, otherwise it'll kill scrolling
+    // performance
+    window.removeEventListener('touchstart', setHasTouch);
+  },
+  false
+);
 
 let gHovered: Vertex;
 function handleSelection() {
