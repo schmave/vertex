@@ -346,9 +346,9 @@ function getPointSize(key: string) {
 function renderStrokes() {
   strokeCtx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height);
   if (gCompleted) return;
+  strokeCtx.strokeStyle = 'black';
+  strokeCtx.lineWidth = 1;
   for (const stroke of completedStrokes) {
-    strokeCtx.strokeStyle = 'black';
-    strokeCtx.lineWidth = 1;
     strokeCtx.beginPath();
     strokeCtx.moveTo(
       scale * stroke[0].coordinates[0] + xShift,
@@ -961,9 +961,11 @@ function handleDrag() {
   renderCursor();
 }
 
-let values: number[] = [];
+let renderPointsValues: number[] = [];
+let renderValues: number[] = [];
 
 function baseRender() {
+  const start = performance.now();
   renderStrokes();
   const a = performance.now();
   renderPoints();
@@ -971,11 +973,18 @@ function baseRender() {
   renderShapes();
   renderCursor();
   renderUI();
-  values.push(b - a);
-  if (values.length > 30) {
-    const sum = values.reduce((x, y) => x + y);
+  const end = performance.now();
+
+  renderPointsValues.push(b - a);
+  renderValues.push(end - start);
+  if (renderPointsValues.length > 30) {
+    const sum = renderPointsValues.reduce((x, y) => x + y);
     console.log('sum of 30 renderPoints', Math.round(sum));
-    values = [];
+    const sum2 = renderValues.reduce((x, y) => x + y);
+    console.log('sum of 30 render', Math.round(sum2));
+
+    renderPointsValues = [];
+    renderValues = [];
   }
 }
 
