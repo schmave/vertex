@@ -487,6 +487,12 @@ function startEndAnimation() {
 function renderPoints() {
   pointsCtx.clearRect(0, 0, pointsCanvas.width, pointsCanvas.height);
   if (gCompleted) return;
+
+  pointsCtx.font = `${15 * canvasScale}px Inter`;
+  pointsCtx.textAlign = 'center';
+  pointsCtx.textBaseline = 'middle';
+  pointsCtx.lineWidth = 1;
+
   for (const key in puzzle.vertices) {
     const vertex = puzzle.vertices[key];
     const strokes =
@@ -502,7 +508,6 @@ function renderPoints() {
 
     pointsCtx.strokeStyle = vertex.selected === 2 ? '#e7ad34' : 'black';
 
-    pointsCtx.lineWidth = 1;
     pointsCtx.setLineDash([1, 1]);
     pointsCtx.beginPath();
     pointsCtx.arc(
@@ -526,7 +531,6 @@ function renderPoints() {
         : vertex.selected === 1
         ? 'black'
         : '#f7f5f6';
-    pointsCtx.lineWidth = 1;
     pointsCtx.setLineDash([]);
     pointsCtx.beginPath();
     pointsCtx.arc(
@@ -540,9 +544,6 @@ function renderPoints() {
     pointsCtx.fill();
     pointsCtx.stroke();
 
-    pointsCtx.font = `${15 * canvasScale}px Inter`;
-    pointsCtx.textAlign = 'center';
-    pointsCtx.textBaseline = 'middle';
     pointsCtx.fillStyle = vertex.selected === 1 ? '#f7f5f6' : 'black';
     pointsCtx.fillText(
       strokes.toString(),
