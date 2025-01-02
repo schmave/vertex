@@ -197,11 +197,18 @@ export function createGame(puzzleData: Puzzle) {
   puzzle = puzzleData;
 
   rescalePuzzle();
+  renderPointHelper();
 
   for (const vertexId in puzzle.vertices) {
     puzzle.vertices[vertexId].id = parseInt(vertexId, 10);
   }
   loadState(puzzle.id);
+
+  // puzzle.shapes.forEach((shape, i) => {
+  //   if (i % 10 !== 0) {
+  //     shape.isPreDrawn = true;
+  //   }
+  // });
 
   window.visualViewport?.addEventListener('resize', onResize);
   window.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -373,21 +380,23 @@ function renderStrokes() {
 }
 function renderShapes() {
   fillCtx.clearRect(0, 0, fillCanvas.width, fillCanvas.height);
+  fillCtx.lineJoin = 'round';
   let allCompleted = true;
   for (const shape of puzzle.shapes) {
     if (
-      isStrokeCompleted([
+      shape.completed ||
+      (isStrokeCompleted([
         puzzle.vertices[shape.vertices[0]],
         puzzle.vertices[shape.vertices[1]],
       ]) &&
-      isStrokeCompleted([
-        puzzle.vertices[shape.vertices[1]],
-        puzzle.vertices[shape.vertices[2]],
-      ]) &&
-      isStrokeCompleted([
-        puzzle.vertices[shape.vertices[2]],
-        puzzle.vertices[shape.vertices[0]],
-      ])
+        isStrokeCompleted([
+          puzzle.vertices[shape.vertices[1]],
+          puzzle.vertices[shape.vertices[2]],
+        ]) &&
+        isStrokeCompleted([
+          puzzle.vertices[shape.vertices[2]],
+          puzzle.vertices[shape.vertices[0]],
+        ]))
     ) {
       shape.completed = true;
     } else if (gCompleted) {
@@ -435,7 +444,6 @@ function renderShapes() {
     if (shape.completed) {
       fillCtx.fillStyle = puzzle.palette[parseInt(shape.color)];
       fillCtx.strokeStyle = puzzle.palette[parseInt(shape.color)];
-      fillCtx.lineJoin = 'round';
       fillCtx.beginPath();
       fillCtx.moveTo(
         scale * puzzle.vertices[shape.vertices[0]].coordinates[0] + xShift,
@@ -541,11 +549,9 @@ function renderPoint(
   renderCtx.fillText(numStrokes.toString(), coordinates[0], coordinates[1]);
 }
 
-function renderPoints() {
-  pointsCtx.clearRect(0, 0, pointsCanvas.width, pointsCanvas.height);
-  if (gCompleted) return;
+const maxDiameter = Math.ceil(3.1 * getPointSizeForNumber(9));
 
-  let maxDiameter = Math.ceil(3.1 * getPointSizeForNumber(9));
+function renderPointHelper() {
   shapesTempCanvas.width = maxDiameter * 10;
   shapesTempCanvas.height = maxDiameter * 4;
   const offscreenCtx = shapesTempCanvas.getContext('2d')!;
@@ -556,6 +562,11 @@ function renderPoints() {
     renderPoint([maxDiameter * (i + 1), 2 * maxDiameter], 1, i, offscreenCtx);
     renderPoint([maxDiameter * (i + 1), 3 * maxDiameter], 2, i, offscreenCtx);
   }
+}
+
+function renderPoints() {
+  pointsCtx.clearRect(0, 0, pointsCanvas.width, pointsCanvas.height);
+  if (gCompleted) return;
 
   for (const key in puzzle.vertices) {
     const vertex = puzzle.vertices[key];
@@ -704,6 +715,7 @@ function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
   completedStrokes.push(stroke);
   undoElement.classList.remove('disabled');
   gRender = true;
+  renderShapes();
   saveState();
   return true;
 }
