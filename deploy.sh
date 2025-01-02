@@ -11,8 +11,7 @@ rm vertex.tgz
 ssh evan@evanmallory.com <<EOF
 set -ex
 cd evanmallory.com
-rm -rf vertex
-mkdir vertex
+mkdir -p vertex
 cd vertex
 tar xzf ~/vertex.tgz
 EOF
