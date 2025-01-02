@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
 import Hammer from 'hammerjs';
-import throttle from 'lodash/throttle';
 
 interface Vector {
   x: number;
@@ -55,6 +54,9 @@ type Stroke = [Vertex, Vertex];
 
 let completedStrokes: Stroke[] = [];
 let gCompleted = false;
+
+let gRender = false;
+let gPanRenderTime = 0;
 
 const canvasScale = Math.ceil(window.devicePixelRatio);
 const fillCanvas = <HTMLCanvasElement>document.getElementById('fill');
@@ -236,7 +238,7 @@ export function createGame(puzzleData: Puzzle) {
   dateElement.innerText = dayjs(puzzle.date).format('MMMM D, YYYY');
 
   setCanvasSizes();
-  render();
+  gRender = true;
 }
 
 function setCanvasSizes() {
@@ -448,7 +450,7 @@ function renderShapes() {
   if (allCompleted && !gCompleted) {
     gCompleted = true;
     startEndAnimation();
-    render();
+    gRender = true;
   }
 }
 
@@ -477,7 +479,7 @@ function doAnimation() {
       'translate(-150%, 0px)';
   }
 
-  render();
+  gRender = true;
 }
 
 function startEndAnimation() {
@@ -682,7 +684,7 @@ function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
   }
   completedStrokes.push(stroke);
   undoElement.classList.remove('disabled');
-  render();
+  gRender = true;
   saveState();
   return true;
 }
@@ -690,7 +692,7 @@ function createStroke(vertex1: Vertex, vertex2: Vertex): boolean {
 function onResize() {
   rescalePuzzle();
   setCanvasSizes();
-  render();
+  gRender = true;
 }
 
 function isStrokeInShape(stroke: Stroke, shape: Shape): boolean {
@@ -718,7 +720,7 @@ function undoStroke() {
       break;
     }
   }
-  render();
+  gRender = true;
   saveState();
 }
 
@@ -727,7 +729,7 @@ function onKeyup(event: KeyboardEvent) {
     completedStrokes.splice(completedStrokes.length - 1, 1);
     gCompleted = false;
     saveState();
-    render();
+    gRender = true;
   }
 }
 
@@ -750,13 +752,14 @@ function zoom(newScale: number, focusX: number, focusY: number) {
   const newY = newScale * y + yShift;
   yShift -= newY - focusY;
   scale = newScale;
-  render();
+  gRender = true;
 }
 let pinchStart: number = scale;
 const hammertime = new Hammer(uiCanvas);
 hammertime.get('pan').set({ threshold: 10, direction: Hammer.DIRECTION_ALL });
 
 hammertime.on('panstart panend panmove pancancel', (e) => {
+  recordStat('panlag', dayjs().valueOf() - e.timeStamp);
   if (e.type === 'panstart') {
     if (mouseDown) {
       onMouseup();
@@ -818,7 +821,7 @@ function removeClosestSegment(x: number, y: number) {
   if (closest && closestDist < 10) {
     let stroke = completedStrokes.indexOf(<Stroke>isStrokeCompleted(closest));
     completedStrokes.splice(stroke, 1);
-    render();
+    gRender = true;
   }
 }
 
@@ -917,7 +920,8 @@ function onMousemove(event: MouseEvent) {
   } else if (mouseDown) {
     xShift += event.movementX * canvasScale;
     yShift += event.movementY * canvasScale;
-    render();
+    gPanRenderTime = event.timeStamp;
+    gRender = true;
   } else {
     handleSelection();
   }
@@ -961,32 +965,78 @@ function handleDrag() {
   renderCursor();
 }
 
-let renderPointsValues: number[] = [];
-let renderValues: number[] = [];
+interface StatDictionary {
+  [key: string]: number[];
+}
+
+let stats: StatDictionary = {};
+
+function recordStat(label: string, value: number) {
+  if (stats[label] === undefined) {
+    stats[label] = [];
+  }
+  stats[label].push(value);
+}
+
+function formatVal(x: number) {
+  return x.toFixed(1).padStart(5);
+}
+
+function printStats() {
+  if (Object.keys(stats).length === 0) {
+    return;
+  }
+  console.log('\n', dayjs().format());
+  Object.keys(stats).forEach((statName) => {
+    const values = stats[statName];
+    if (!values || values.length === 0) {
+      return;
+    }
+    values.sort();
+    const num = values.length;
+    console.log(
+      statName.padStart(20),
+      num.toString().padStart(2),
+      // formatVal(values[0]),
+      formatVal(values[Math.floor(num / 2)]),
+      formatVal(values[num - 1])
+    );
+  });
+  stats = {};
+}
+
+setInterval(printStats, 1000);
 
 function baseRender() {
-  const start = performance.now();
-  renderStrokes();
+  requestAnimationFrame(baseRender);
+
+  if (gRender === false) {
+    return;
+  }
+  gRender = false;
+
   const a = performance.now();
-  renderPoints();
+  renderStrokes();
   const b = performance.now();
+  renderPoints();
+  const c = performance.now();
   renderShapes();
+  const d = performance.now();
   renderCursor();
+  const e = performance.now();
   renderUI();
-  const end = performance.now();
+  const f = performance.now();
 
-  renderPointsValues.push(b - a);
-  renderValues.push(end - start);
-  if (renderPointsValues.length > 30) {
-    const sum = renderPointsValues.reduce((x, y) => x + y);
-    console.log('sum of 30 renderPoints', Math.round(sum));
-    const sum2 = renderValues.reduce((x, y) => x + y);
-    console.log('sum of 30 render', Math.round(sum2));
-
-    renderPointsValues = [];
-    renderValues = [];
+  recordStat('renderStrokes', b - a);
+  recordStat('renderPoints', c - b);
+  recordStat('renderShapes', d - c);
+  recordStat('renderCursor', e - d);
+  recordStat('renderUI', f - e);
+  recordStat('render', f - a);
+  if (gPanRenderTime) {
+    recordStat('renderlag', f - gPanRenderTime);
+    gPanRenderTime = 0;
   }
 }
 
-// Throttling render improves perceived performance on lower-end devices
-const render = throttle(baseRender, 30);
+requestAnimationFrame(baseRender);
