@@ -64,6 +64,9 @@ const strokeCanvas = <HTMLCanvasElement>document.getElementById('stroke');
 const pointsCanvas = <HTMLCanvasElement>document.getElementById('points');
 const cursorCanvas = <HTMLCanvasElement>document.getElementById('cursor');
 const uiCanvas = <HTMLCanvasElement>document.getElementById('uicanvas');
+const shapesTempCanvas = document.getElementById(
+  'shapes-temp'
+) as HTMLCanvasElement;
 
 const fillCtx = <CanvasRenderingContext2D>fillCanvas.getContext('2d');
 const strokeCtx = <CanvasRenderingContext2D>strokeCanvas.getContext('2d');
@@ -338,6 +341,10 @@ function isStrokeCompleted(stroke: Stroke) {
 function getPointSize(key: string) {
   const number =
     getStrokesAtPoint(key).length - getNumCompletedStrokesAtPoint(key);
+  return getPointSizeForNumber(number);
+}
+
+function getPointSizeForNumber(number: number) {
   const size = number < 4 ? 12 : number < 7 ? 18 : 24;
   // This was the old way of adjusting the size of the points a little bit based
   // on the current zoom.
@@ -496,14 +503,59 @@ function startEndAnimation() {
   doAnimation();
 }
 
+function renderPoint(
+  coordinates: number[],
+  selected: number,
+  numStrokes: number,
+  renderCtx: CanvasRenderingContext2D
+) {
+  renderCtx.font = `${15 * canvasScale}px Inter`;
+  renderCtx.textAlign = 'center';
+  renderCtx.textBaseline = 'middle';
+  renderCtx.lineWidth = 1;
+
+  const size = getPointSizeForNumber(numStrokes);
+
+  renderCtx.strokeStyle = selected === 2 ? '#e7ad34' : 'black';
+
+  renderCtx.setLineDash([1, 1]);
+  renderCtx.beginPath();
+  renderCtx.arc(coordinates[0], coordinates[1], 1.5 * size, 0, 2 * Math.PI);
+  renderCtx.closePath();
+  if (selected) {
+    renderCtx.fillStyle = selected === 2 ? '#e7ad3433' : 'rgba(0, 0, 0, 0.2)';
+    renderCtx.fill();
+  }
+  renderCtx.stroke();
+
+  renderCtx.fillStyle =
+    selected === 2 ? '#e7ad34' : selected === 1 ? 'black' : '#f7f5f6';
+  renderCtx.setLineDash([]);
+  renderCtx.beginPath();
+  renderCtx.arc(coordinates[0], coordinates[1], size, 0, 2 * Math.PI);
+  renderCtx.closePath();
+  renderCtx.fill();
+  renderCtx.stroke();
+
+  renderCtx.fillStyle = selected === 1 ? '#f7f5f6' : 'black';
+  renderCtx.fillText(numStrokes.toString(), coordinates[0], coordinates[1]);
+}
+
 function renderPoints() {
   pointsCtx.clearRect(0, 0, pointsCanvas.width, pointsCanvas.height);
   if (gCompleted) return;
 
-  pointsCtx.font = `${15 * canvasScale}px Inter`;
-  pointsCtx.textAlign = 'center';
-  pointsCtx.textBaseline = 'middle';
-  pointsCtx.lineWidth = 1;
+  let maxDiameter = Math.ceil(3.1 * getPointSizeForNumber(9));
+  shapesTempCanvas.width = maxDiameter * 10;
+  shapesTempCanvas.height = maxDiameter * 4;
+  const offscreenCtx = shapesTempCanvas.getContext('2d')!;
+  offscreenCtx.clearRect(0, 0, shapesTempCanvas.width, shapesTempCanvas.height);
+
+  for (let i = 0; i < 10; i++) {
+    renderPoint([maxDiameter * (i + 1), maxDiameter], 0, i, offscreenCtx);
+    renderPoint([maxDiameter * (i + 1), 2 * maxDiameter], 1, i, offscreenCtx);
+    renderPoint([maxDiameter * (i + 1), 3 * maxDiameter], 2, i, offscreenCtx);
+  }
 
   for (const key in puzzle.vertices) {
     const vertex = puzzle.vertices[key];
@@ -516,51 +568,18 @@ function renderPoints() {
     )
       continue;
 
-    const size = getPointSize(key);
-
-    pointsCtx.strokeStyle = vertex.selected === 2 ? '#e7ad34' : 'black';
-
-    pointsCtx.setLineDash([1, 1]);
-    pointsCtx.beginPath();
-    pointsCtx.arc(
-      scale * vertex.coordinates[0] + xShift,
-      scale * vertex.coordinates[1] + yShift,
-      1.5 * size,
-      0,
-      2 * Math.PI
-    );
-    pointsCtx.closePath();
-    if (vertex.selected) {
-      pointsCtx.fillStyle =
-        vertex.selected === 2 ? '#e7ad3433' : 'rgba(0, 0, 0, 0.2)';
-      pointsCtx.fill();
-    }
-    pointsCtx.stroke();
-
-    pointsCtx.fillStyle =
-      vertex.selected === 2
-        ? '#e7ad34'
-        : vertex.selected === 1
-        ? 'black'
-        : '#f7f5f6';
-    pointsCtx.setLineDash([]);
-    pointsCtx.beginPath();
-    pointsCtx.arc(
-      scale * vertex.coordinates[0] + xShift,
-      scale * vertex.coordinates[1] + yShift,
-      size,
-      0,
-      2 * Math.PI
-    );
-    pointsCtx.closePath();
-    pointsCtx.fill();
-    pointsCtx.stroke();
-
-    pointsCtx.fillStyle = vertex.selected === 1 ? '#f7f5f6' : 'black';
-    pointsCtx.fillText(
-      strokes.toString(),
-      scale * vertex.coordinates[0] + xShift,
-      scale * vertex.coordinates[1] + yShift
+    // All of these values need to be integers so that the image doesn't
+    // get anti-aliased when it is copied.
+    pointsCtx.drawImage(
+      shapesTempCanvas,
+      Math.round(maxDiameter * (strokes + 1) - maxDiameter / 2),
+      Math.round(maxDiameter / 2 + maxDiameter * (vertex.selected || 0)),
+      maxDiameter,
+      maxDiameter,
+      Math.round(scale * vertex.coordinates[0] + xShift - maxDiameter / 2),
+      Math.round(scale * vertex.coordinates[1] + yShift - maxDiameter / 2),
+      maxDiameter,
+      maxDiameter
     );
   }
 }
