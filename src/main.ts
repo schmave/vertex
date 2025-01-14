@@ -87,8 +87,8 @@ const constructorElement = <HTMLSpanElement>(
 const themeElement = <HTMLSpanElement>document.getElementById('theme');
 const dateElement = <HTMLSpanElement>document.getElementById('date');
 
-let clicked: Vertex | null;
-let selected: Vertex | null;
+let gClicked: Vertex | null;
+let gSelected: Vertex | null;
 let mouseDown = false;
 let mouse = { x: 0, y: 0 };
 
@@ -549,18 +549,19 @@ function renderPoint(
   renderCtx.fillText(numStrokes.toString(), coordinates[0], coordinates[1]);
 }
 
-const maxDiameter = Math.ceil(3.1 * getPointSizeForNumber(9));
+const MAX_DIAMETER = Math.ceil(3.1 * getPointSizeForNumber(9));
 
 function renderPointHelper() {
-  shapesTempCanvas.width = maxDiameter * 10;
-  shapesTempCanvas.height = maxDiameter * 4;
+  const maxEdges = 14;
+  shapesTempCanvas.width = MAX_DIAMETER * (maxEdges + 1);
+  shapesTempCanvas.height = MAX_DIAMETER * 4;
   const offscreenCtx = shapesTempCanvas.getContext('2d')!;
   offscreenCtx.clearRect(0, 0, shapesTempCanvas.width, shapesTempCanvas.height);
 
-  for (let i = 0; i < 10; i++) {
-    renderPoint([maxDiameter * (i + 1), maxDiameter], 0, i, offscreenCtx);
-    renderPoint([maxDiameter * (i + 1), 2 * maxDiameter], 1, i, offscreenCtx);
-    renderPoint([maxDiameter * (i + 1), 3 * maxDiameter], 2, i, offscreenCtx);
+  for (let i = 0; i < maxEdges; i++) {
+    renderPoint([MAX_DIAMETER * (i + 1), MAX_DIAMETER], 0, i, offscreenCtx);
+    renderPoint([MAX_DIAMETER * (i + 1), 2 * MAX_DIAMETER], 1, i, offscreenCtx);
+    renderPoint([MAX_DIAMETER * (i + 1), 3 * MAX_DIAMETER], 2, i, offscreenCtx);
   }
 }
 
@@ -583,22 +584,22 @@ function renderPoints() {
     // get anti-aliased when it is copied.
     pointsCtx.drawImage(
       shapesTempCanvas,
-      Math.round(maxDiameter * (strokes + 1) - maxDiameter / 2),
-      Math.round(maxDiameter / 2 + maxDiameter * (vertex.selected || 0)),
-      maxDiameter,
-      maxDiameter,
-      Math.round(scale * vertex.coordinates[0] + xShift - maxDiameter / 2),
-      Math.round(scale * vertex.coordinates[1] + yShift - maxDiameter / 2),
-      maxDiameter,
-      maxDiameter
+      Math.round(MAX_DIAMETER * (strokes + 1) - MAX_DIAMETER / 2),
+      Math.round(MAX_DIAMETER / 2 + MAX_DIAMETER * (vertex.selected || 0)),
+      MAX_DIAMETER,
+      MAX_DIAMETER,
+      Math.round(scale * vertex.coordinates[0] + xShift - MAX_DIAMETER / 2),
+      Math.round(scale * vertex.coordinates[1] + yShift - MAX_DIAMETER / 2),
+      MAX_DIAMETER,
+      MAX_DIAMETER
     );
   }
 }
 function renderCursor() {
   cursorCtx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
   if (gCompleted) return;
-  if (clicked && mouseDown) {
-    if (clicked.selected === 2) {
+  if (gClicked && mouseDown) {
+    if (gClicked.selected === 2) {
       cursorCtx.strokeStyle = '#e7ad34';
       cursorCtx.fillStyle = '#e7ad34';
     } else {
@@ -610,8 +611,8 @@ function renderCursor() {
     cursorCtx.setLineDash([4, 4]);
     cursorCtx.beginPath();
     cursorCtx.moveTo(
-      scale * clicked.coordinates[0] + xShift,
-      scale * clicked.coordinates[1] + yShift
+      scale * gClicked.coordinates[0] + xShift,
+      scale * gClicked.coordinates[1] + yShift
     );
     cursorCtx.lineTo(mouse.x, mouse.y);
     cursorCtx.stroke();
@@ -883,6 +884,15 @@ function handleSelection() {
   let closestKey = '';
   for (const key in puzzle.vertices) {
     const vertex = puzzle.vertices[key];
+
+    const strokes =
+      getStrokesAtPoint(vertex).length - getNumCompletedStrokesAtPoint(vertex);
+
+    if (strokes === 0) {
+      // Ignore vertices that don't have any available strokes
+      continue;
+    }
+
     if (
       (vertex.coordinates[0] - x) ** 2 + (vertex.coordinates[1] - y) ** 2 <
       dist
@@ -894,19 +904,19 @@ function handleSelection() {
   }
   dist = Math.sqrt(dist);
   const screenDist = dist * scale;
-  if (closestKey && screenDist < 3 * getPointSize(closestKey)) {
+  if (closestKey && screenDist < 1.6 * getPointSize(closestKey)) {
     if (mouseDown) {
-      clicked = puzzle.vertices[closestKey];
+      gClicked = puzzle.vertices[closestKey];
 
       const strokes =
-        getStrokesAtPoint(clicked).length -
-        getNumCompletedStrokesAtPoint(clicked);
+        getStrokesAtPoint(gClicked).length -
+        getNumCompletedStrokesAtPoint(gClicked);
 
       if (strokes > 0) {
-        clicked.selected = 1;
+        gClicked.selected = 1;
         renderPoints();
       } else {
-        clicked = null;
+        gClicked = null;
       }
     } else {
       if (gHovered && gHovered !== puzzle.vertices[closestKey]) {
@@ -926,14 +936,14 @@ function handleSelection() {
 function onMouseup() {
   mouseDown = false;
 
-  if (clicked?.selected && selected?.selected) {
-    createStroke(clicked, selected);
+  if (gClicked?.selected && gSelected?.selected) {
+    createStroke(gClicked, gSelected);
   }
 
-  if (clicked) clicked.selected = 0;
-  clicked = null;
-  if (selected) selected.selected = 0;
-  selected = null;
+  if (gClicked) gClicked.selected = 0;
+  gClicked = null;
+  if (gSelected) gSelected.selected = 0;
+  gSelected = null;
   if (gHovered) {
     // Sometimes vertices remain drawn in black after a drag is complete. Hopefully
     // this fixes it?
@@ -946,7 +956,7 @@ function onMousemove(event: MouseEvent) {
   mouse.x = event.clientX * canvasScale;
   mouse.y = event.clientY * canvasScale;
 
-  if (clicked) {
+  if (gClicked) {
     handleDrag();
   } else if (mouseDown) {
     xShift += event.movementX * canvasScale;
@@ -960,14 +970,21 @@ function onMousemove(event: MouseEvent) {
   renderCursor();
 }
 function handleDrag() {
-  if (!clicked) return;
+  if (!gClicked) return;
   const x = (mouse.x - xShift) / scale;
   const y = (mouse.y - yShift) / scale;
   let dist = Infinity;
   let closestKey = '';
   for (const key in puzzle.vertices) {
     const vertex = puzzle.vertices[key];
-    if (vertex === clicked) continue;
+    if (vertex === gClicked) continue;
+
+    const strokes =
+      getStrokesAtPoint(vertex).length - getNumCompletedStrokesAtPoint(vertex);
+    if (strokes === 0) {
+      continue;
+    }
+
     if (
       (vertex.coordinates[0] - x) ** 2 + (vertex.coordinates[1] - y) ** 2 <
       dist
@@ -981,16 +998,16 @@ function handleDrag() {
     closestKey &&
     dist < ((1.5 * getPointSize(closestKey) + 24) / scale) ** 2
   ) {
-    if (selected && selected !== puzzle.vertices[closestKey]) {
-      selected.selected = 0;
+    if (gSelected && gSelected !== puzzle.vertices[closestKey]) {
+      gSelected.selected = 0;
     }
-    selected = puzzle.vertices[closestKey];
-    selected.selected = 2;
-    clicked.selected = 2;
+    gSelected = puzzle.vertices[closestKey];
+    gSelected.selected = 2;
+    gClicked.selected = 2;
     renderPoints();
-  } else if (clicked.selected !== 1 || selected) {
-    clicked.selected = 1;
-    if (selected) selected.selected = 0;
+  } else if (gClicked.selected !== 1 || gSelected) {
+    gClicked.selected = 1;
+    if (gSelected) gSelected.selected = 0;
     renderPoints();
   }
   renderCursor();
