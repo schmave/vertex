@@ -52,6 +52,10 @@ canvas {
 #constructor, #date {
   flex: 0 0 150px;
 }
+#constructor::after {
+  content: ' (A)';
+  font-size: 8px;
+}
 #date {
   text-align: right;
 }
@@ -131,4 +135,8 @@ canvas {
 }
 #zoom button.disabled,#undo.disabled {
   opacity: 0.5;
+}
+
+* {
+  touch-action: manipulation;
 }
