@@ -52,10 +52,11 @@ canvas {
 #constructor, #date {
   flex: 0 0 150px;
 }
-#constructor::after {
-  content: ' (A)';
+/* Enable this to test what version you are running */
+/* #constructor::after {
+  content: ' (B)';
   font-size: 8px;
-}
+} */
 #date {
   text-align: right;
 }
