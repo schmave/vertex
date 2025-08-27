@@ -60,6 +60,29 @@ canvas {
 #date {
   text-align: right;
 }
+
+.balloon-outer {
+  position: absolute;
+  bottom: -150px;
+  animation: floatUp linear forwards;
+}
+
+.balloon-inner {
+  display: inline-block;
+  animation: drift ease-in-out infinite alternate;
+}
+
+@keyframes floatUp {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-130vh); }
+}
+
+@keyframes drift {
+  0%   { transform: translateX(0); }
+  50%  { transform: translateX(30px); }
+  100% { transform: translateX(-30px); }
+}
+
 #message {
   position: absolute;
   bottom: 10px;

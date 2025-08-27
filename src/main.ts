@@ -497,7 +497,67 @@ function doAnimation() {
   gRender = true;
 }
 
+function getMessage() {
+  const now = new Date();
+  if (now.getMonth() == 8 && now.getDate() >= 6 && now.getDate() <= 20) {
+    setTimeout(createBalloons, 400);
+    return 'Happy Birthday, Mom! 🍰';
+  }
+  if (now.getMonth() === 0 || now.getMonth() == 11) {
+    return '🎄 Merry Christmas, Mom! 🎄';
+  }
+  return 'All done. Congratulations! 🎉';
+}
+
+function createBalloons() {
+  for (let i = 0; i < 6; i++) {
+    createBalloon();
+  }
+
+  if (Math.random() > 0.4) {
+    setTimeout(createBalloons, 500);
+  }
+}
+
+function createBalloon() {
+  // Outer wrapper handles upward float
+  const balloonOuter = document.createElement('span');
+  balloonOuter.classList.add('balloon-outer');
+
+  // Inner span handles drifting + emoji
+  const balloonInner = document.createElement('span');
+  balloonInner.classList.add('balloon-inner');
+
+  const emojis = ['🎈'];
+  balloonInner.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+  // Random horizontal starting position
+  balloonOuter.style.left =
+    Math.random() * document.documentElement.clientWidth + 'px';
+
+  // Random size
+  const size = Math.random() * 20 + 60; // 40–60px
+  balloonInner.style.fontSize = size + 'px';
+
+  // Random float duration (upwards)
+  const floatDuration = Math.random() * 3 + 4; // 4–7s
+  balloonOuter.style.animationDuration = floatDuration + 's';
+
+  // Random drift duration (side to side)
+  const driftDuration = Math.random() * 1 + 2;
+  balloonInner.style.animationDuration = driftDuration + 's';
+
+  balloonOuter.appendChild(balloonInner);
+  document.body.appendChild(balloonOuter);
+
+  // Cleanup when float animation ends
+  balloonOuter.addEventListener('animationend', () => {
+    balloonOuter.remove();
+  });
+}
+
 function startEndAnimation() {
+  document.getElementById('message')!.innerHTML = getMessage();
   document.getElementById('message')!.style.display = 'block';
   document.getElementById('message')!.style.transform = '';
   gAnimationFramesRemaining = ANIMATION_NUM_FRAMES;
